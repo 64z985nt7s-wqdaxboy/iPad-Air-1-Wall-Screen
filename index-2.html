@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Home">
+<meta name="format-detection" content="telephone=no">
+<title>Home Display</title>
+<!--
+  Home Display: a HomeView-style dashboard with an iOS look, for older iPads.
+  Written for Safari 12 (iPad Air 1, iOS 12.5): no optional chaining, no ??,
+  no flexbox gap, no clamp()/min(), no AbortController, no backdrop blur
+  (the "glass" is translucent fills over a smooth wallpaper, which is cheap on an A7).
+  Weather: Open-Meteo (free, no API key). Scene tiles run shortcuts from the Shortcuts app.
+-->
+<style>
+:root{
+  --blue:#0a84ff; --orange:#ff9f0a; --green:#30d158; --red:#ff453a; --yellow:#ffd60a;
+  --label2:rgba(235,235,245,.6); --label3:rgba(235,235,245,.3);
+  --sep:rgba(84,84,88,.65); --fill:rgba(118,118,128,.24); --fill2:rgba(120,120,128,.36);
+  --widget:rgba(22,22,26,.58);
+}
+html,body{margin:0;height:100%;overflow:hidden;background:#000;color:#fff;
+  font-family:-apple-system,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:rgba(0,0,0,0);-webkit-touch-callout:none}
+input,select{-webkit-user-select:text;user-select:text}
+button{font-family:inherit;cursor:pointer;padding:0;color:inherit}
+svg{display:block}
+.hidden{display:none !important}
+.press{transition:transform .18s ease}
+.press:active{transform:scale(.95)}
+
+/* ---------- wallpaper ---------- */
+#wall{position:fixed;top:0;left:0;right:0;bottom:0}
+
+/* ---------- layout ---------- */
+.dash{position:relative;height:100%;box-sizing:border-box;padding:26px 22px 22px;display:grid;grid-gap:16px;
+  grid-template-columns:400px 1fr 1fr;grid-template-rows:auto 1fr auto;
+  grid-template-areas:"clock timers rem" "wx timers rem" "wx scenes scenes"}
+.standalone .dash{padding-top:40px}
+#clockW{grid-area:clock}
+#wxW{grid-area:wx}
+#timerW{grid-area:timers}
+#remW{grid-area:rem}
+#scenesW{grid-area:scenes}
+
+/* ---------- lock-screen clock ---------- */
+#clockW{display:flex;align-items:flex-start;justify-content:space-between;padding:0 4px}
+.c-date{font-size:21px;font-weight:600;color:rgba(255,255,255,.88);margin-left:3px}
+.c-time{font-size:122px;font-weight:700;line-height:.98;letter-spacing:-4px;color:rgba(255,255,255,.96);
+  text-shadow:0 2px 24px rgba(0,0,0,.12);white-space:nowrap}
+.more{width:38px;height:38px;border-radius:19px;border:0;background:rgba(255,255,255,.2);
+  display:flex;align-items:center;justify-content:center;flex:none;margin-top:2px}
+
+/* ---------- widgets ---------- */
+.w{background:var(--widget);border-radius:22px;padding:14px 16px 12px;overflow:hidden;min-height:0;
+  display:flex;flex-direction:column}
+.w-h{display:flex;align-items:center;font-size:15px;font-weight:600;margin-bottom:10px;flex:none}
+.w-h .ic{width:26px;height:26px;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-right:8px}
+.w-h .right{margin-left:auto;display:flex;align-items:center}
+.w-h .count{margin-left:12px;font-size:26px;font-weight:700;line-height:1;color:var(--blue)}
+.scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.muted{color:var(--label2);font-size:15px;padding:8px 0;line-height:1.35}
+
+/* weather (iOS Weather style) */
+.wx{position:relative;background:linear-gradient(180deg,#2f7fd8,#62aef0);padding:16px 18px 12px;transition:background 1s;cursor:pointer}
+.wx>*{position:relative;z-index:1}
+.wx>.sky{position:absolute;top:0;left:0;right:0;bottom:0;z-index:0;overflow:hidden;pointer-events:none}
+.sky i{position:absolute;display:block}
+.cloud{width:300px;height:130px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(255,255,255,.3) 0,rgba(255,255,255,0) 70%);
+  animation:drift 45s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translateX(-50px)}to{transform:translateX(70px)}}
+.sunglow{top:-120px;right:-100px;width:330px;height:330px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,240,180,.55) 0,rgba(255,240,180,0) 65%);animation:glow 7s ease-in-out infinite alternate}
+@keyframes glow{from{opacity:.55;transform:scale(1)}to{opacity:1;transform:scale(1.08)}}
+.star{width:2px;height:2px;border-radius:1px;background:#fff;animation:twinkle 3.5s ease-in-out infinite alternate}
+@keyframes twinkle{from{opacity:.15}to{opacity:.85}}
+.drop{top:-30px;width:1.5px;height:18px;background:linear-gradient(rgba(255,255,255,0),rgba(255,255,255,.55));animation:fall 1s linear infinite}
+@keyframes fall{from{transform:translate3d(0,0,0) rotate(12deg)}to{transform:translate3d(-130px,640px,0) rotate(12deg)}}
+.flake{top:-10px;width:5px;height:5px;border-radius:3px;background:rgba(255,255,255,.85);animation:snowfall 7s linear infinite}
+@keyframes snowfall{from{transform:translate3d(0,0,0)}to{transform:translate3d(-60px,640px,0)}}
+.flash{top:0;left:0;right:0;bottom:0;background:#fff;opacity:0;animation:flash 9s infinite}
+@keyframes flash{0%,90%,100%{opacity:0}91%{opacity:.35}92%{opacity:0}93.5%{opacity:.22}95%{opacity:0}}
+.fx-paused .sky i{animation-play-state:paused}
+.pills{display:flex;margin:10px -3px 0;flex:none;white-space:nowrap;overflow:hidden;position:relative}
+.pill2{display:flex;align-items:center;margin:0 3px;padding:5px 9px;border-radius:13px;background:rgba(255,255,255,.17);font-size:13px;font-weight:600;flex:none}
+.pill2 i{width:8px;height:8px;border-radius:4px;margin-right:6px}
+.alertline{margin-top:8px;padding:8px 11px;border-radius:12px;background:rgba(0,0,0,.18);font-size:14px;font-weight:600;line-height:1.3;flex:none}
+.alertline.warn{background:rgba(255,159,10,.32)}
+.alertline small{font-size:12px;opacity:.75}
+.upd{white-space:nowrap;margin-left:10px}
+.spin{display:inline-block;font-style:normal}
+.spin.on{animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.wx-top{display:flex;justify-content:space-between;align-items:flex-start;flex:none}
+.wx-city{font-size:17px;font-weight:600;display:flex;align-items:center}
+.wx-city svg{margin-left:5px}
+.wx-temp{font-size:60px;font-weight:300;line-height:1.05;letter-spacing:-1px;margin-top:2px}
+.wx-right{text-align:right;padding-top:2px}
+.wx-icon{font-size:30px;line-height:1.1}
+.wx-desc,.wx-hl{font-size:15px;font-weight:600}
+.wx-desc{margin-top:6px}
+.wx-sub{font-size:13px;color:rgba(255,255,255,.7);margin-top:2px}
+.wx-cols{flex:1;min-height:0;display:flex;flex-direction:column}
+.wx-cols>div{display:flex;flex-direction:column;min-height:0;flex:none}
+.wx-cols>div:last-child{flex:1}
+.wx-sec{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.2px;color:rgba(255,255,255,.62);
+  padding:12px 0 6px;border-bottom:.5px solid rgba(255,255,255,.28);flex:none}
+.hourly{display:flex;padding:8px 0 2px;flex:none}
+.hr{flex:1;text-align:center;font-size:15px;font-weight:600}
+.hr .t{font-size:13px}
+.hr .i{font-size:21px;line-height:1;margin:5px 0 1px}
+.hr .p{font-size:10px;line-height:12px;height:12px;color:#9fd8ff;font-weight:700}
+.daily{flex:1;min-height:0}
+.drow{display:flex;align-items:center;font-size:17px;font-weight:600;height:34px;border-top:.5px solid rgba(255,255,255,.28)}
+.drow:first-child{border-top:0}
+.dname{width:58px}
+.dicon{width:44px;text-align:center;font-size:20px;line-height:1}
+.dicon small{display:block;font-size:10px;line-height:1.2;color:#9fd8ff;font-weight:700}
+.dlo{width:36px;text-align:right;color:rgba(255,255,255,.6)}
+.dhi{width:36px;text-align:right}
+.dbar{flex:1;height:5px;border-radius:3px;background:rgba(0,0,0,.17);margin:0 10px;position:relative}
+.dbar i{position:absolute;top:0;bottom:0;border-radius:3px}
+.dbar b{position:absolute;top:-1.5px;width:8px;height:8px;margin-left:-4px;border-radius:4px;background:#fff;
+  box-shadow:0 0 0 1.5px rgba(0,0,0,.22)}
+.wx-foot{display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.66);padding-top:6px;flex:none}
+
+/* timers (Clock app / Live Activity style) */
+.presets{display:flex;flex-wrap:wrap;margin:-4px -4px 6px;flex:none}
+.pill{flex:1 0 21%;margin:4px;height:40px;border-radius:20px;border:0;background:var(--fill);color:#fff;font-size:15px;font-weight:600}
+.trow{display:flex;align-items:center;padding:10px 0;border-top:.5px solid var(--sep)}
+.tmid{flex:1;min-width:0;margin-left:12px}
+.tlabel{font-size:13px;color:var(--label2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tremain{font-size:30px;font-weight:500;color:var(--orange);font-variant-numeric:tabular-nums;line-height:1.1}
+.trow.paused .tremain{color:var(--label2)}
+.cbtn{width:40px;height:40px;border-radius:20px;border:0;margin-left:8px;display:flex;align-items:center;justify-content:center;flex:none}
+.cbtn.pause{background:rgba(255,159,10,.24);color:var(--orange)}
+.cbtn.x{background:var(--fill2);color:#fff}
+
+/* reminders */
+#remList{list-style:none;margin:0;padding:0}
+#remList li{display:flex;align-items:flex-start;padding:9px 0 0}
+.rc{width:22px;height:22px;border-radius:11px;border:1.5px solid rgba(235,235,245,.32);box-sizing:border-box;margin-right:12px;flex:none;position:relative}
+#remList li.done .rc{border-color:var(--blue)}
+#remList li.done .rc:after{content:'';position:absolute;top:3px;left:3px;width:13px;height:13px;border-radius:7px;background:var(--blue)}
+.rt{flex:1;min-width:0;font-size:17px;line-height:22px;padding-bottom:9px;border-bottom:.5px solid var(--sep);word-wrap:break-word}
+#remList li.done .rt{color:var(--label3)}
+.newrem{display:flex;align-items:center;padding-top:10px;flex:none}
+.plus{width:22px;height:22px;border-radius:11px;background:var(--blue);margin-right:12px;position:relative;flex:none}
+.plus:before,.plus:after{content:'';position:absolute;background:#fff;border-radius:1px}
+.plus:before{left:5px;right:5px;top:10px;height:2px}
+.plus:after{top:5px;bottom:5px;left:10px;width:2px}
+.newrem input{flex:1;min-width:0;background:none;border:0;outline:none;color:#fff;font-size:17px;font-family:inherit;-webkit-appearance:none;padding:2px 0}
+.newrem input::-webkit-input-placeholder{color:var(--blue)}
+.newrem input::placeholder{color:var(--blue)}
+.clearbtn{border:0;background:none;color:var(--blue);font-size:15px;font-weight:400;white-space:nowrap}
+
+/* home scenes (Home app tiles) */
+#scenesW{min-width:0}
+.sec-title{font-size:17px;font-weight:700;margin:0 4px 8px;text-shadow:0 1px 8px rgba(0,0,0,.15)}
+.tiles{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;grid-gap:12px}
+.tile{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;height:80px;border-radius:16px;background:var(--widget);padding:0 12px;box-sizing:border-box;
+  text-decoration:none;color:#fff;min-width:0;transition:background .2s,color .2s,transform .18s}
+.ti{width:32px;height:32px;border-radius:16px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;
+  font-size:17px;margin-bottom:6px;flex:none;transition:background .2s}
+.tt{min-width:0;max-width:100%}
+.tn{font-size:15px;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ts{font-size:12px;color:var(--label2)}
+.tile.on{background:rgba(255,255,255,.94);color:#000}
+.tile.on .ti{background:rgba(255,214,10,.3)}
+.tile.on .ts{color:rgba(60,60,67,.6)}
+
+/* ---------- StandBy screensaver ---------- */
+.standby{position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:20;display:flex;align-items:center;justify-content:center}
+.sb-inner{text-align:center;transition:transform 3s}
+.sb-date{font-size:28px;font-weight:600;color:var(--orange)}
+.sb-time{font-size:290px;font-weight:700;letter-spacing:-12px;line-height:.92;color:#fff;margin:4px 0 14px}
+.sb-wx{font-size:28px;font-weight:600;color:rgba(255,255,255,.6)}
+.standby.red .sb-date,.standby.red .sb-time,.standby.red .sb-wx{color:#b3261e}
+.standby.red .sb-wx{opacity:.7}
+
+.dim{position:fixed;top:0;left:0;right:0;bottom:0;background:#000;opacity:0;pointer-events:none;z-index:30;transition:opacity 2s}
+.dim.on{opacity:.6}
+
+/* ---------- Settings (iOS grouped sheet) ---------- */
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;z-index:40;background:rgba(0,0,0,.45);opacity:0;transition:opacity .3s;
+  display:flex;align-items:center;justify-content:center}
+.modal.open{opacity:1}
+.sheet{width:600px;max-width:94%;height:88%;background:#1c1c1e;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;
+  transform:translateY(100%);transition:transform .38s cubic-bezier(.2,.9,.3,1)}
+.modal.open .sheet{transform:translateY(0)}
+.nav{height:56px;flex:none;display:flex;align-items:center;justify-content:center;position:relative;font-size:17px;font-weight:600;
+  border-bottom:.5px solid var(--sep)}
+.nav .done{position:absolute;right:18px;top:0;bottom:0;border:0;background:none;color:var(--blue);font-size:17px;font-weight:600}
+.sbody{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 20px 34px}
+.gh{font-size:13px;color:var(--label2);text-transform:uppercase;margin:26px 16px 7px}
+.gf{font-size:13px;color:var(--label2);margin:7px 16px 0;line-height:1.38}
+.group{background:#2c2c2e;border-radius:10px;overflow:hidden}
+.cell{display:flex;align-items:center;min-height:44px;padding:0 16px;font-size:17px;position:relative}
+.cell+.cell:before{content:'';position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--sep)}
+.cell .val{margin-left:auto;color:var(--label2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%}
+.cell .chev{margin-left:8px;color:rgba(235,235,245,.3)}
+.cell.link{color:var(--blue)}
+.cell.tap:active{background:#3a3a3c}
+.cell svg.lead{margin-right:10px;flex:none}
+.cell select{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;font-size:17px}
+.ein{flex:1;min-width:0;background:none;border:0;color:#fff;font-size:17px;height:44px;outline:none;-webkit-appearance:none;font-family:inherit;padding:0}
+.ein::-webkit-input-placeholder{color:var(--label3)}
+.ein::placeholder{color:var(--label3)}
+.ein+.ein{border-left:.5px solid var(--sep);padding-left:12px;margin-left:12px}
+.seg{display:flex;background:var(--fill);border-radius:9px;padding:2px;margin-left:auto;width:230px}
+.seg button{flex:1;height:28px;border:0;background:none;color:#fff;font-size:13px;font-weight:500;border-radius:7px;transition:background .2s}
+.seg button.on{background:#636366;font-weight:600;box-shadow:0 3px 8px rgba(0,0,0,.12)}
+.sw{position:relative;width:51px;height:31px;margin-left:auto;flex:none}
+.sw input{position:absolute;top:0;left:0;width:100%;height:100%;margin:0;opacity:0;z-index:2}
+.sw span{position:absolute;top:0;left:0;right:0;bottom:0;border-radius:16px;background:#39393d;transition:background .25s}
+.sw span:after{content:'';position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:14px;background:#fff;
+  box-shadow:0 3px 8px rgba(0,0,0,.15),0 3px 1px rgba(0,0,0,.06);transition:transform .25s}
+.sw input:checked+span{background:var(--green)}
+.sw input:checked+span:after{transform:translateX(20px)}
+.minus,.addc{width:22px;height:22px;border-radius:11px;border:0;margin-right:12px;flex:none;position:relative}
+.minus{background:var(--red)}
+.addc{background:var(--green)}
+.minus:after,.addc:after,.addc:before{content:'';position:absolute;background:#fff;border-radius:1px}
+.minus:after,.addc:after{left:5px;right:5px;top:10px;height:2px}
+.addc:before{top:5px;bottom:5px;left:10px;width:2px}
+.swatches{display:flex;padding:14px 16px}
+.swatch{width:46px;height:46px;border-radius:23px;border:0;margin-right:16px}
+.swatch.on{box-shadow:0 0 0 2px #2c2c2e,0 0 0 4px #fff}
+
+/* ---------- iOS alert ---------- */
+.alertbg{position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;background:rgba(0,0,0,.45);opacity:0;transition:opacity .2s;
+  display:flex;align-items:center;justify-content:center}
+.alertbg.open{opacity:1}
+.alert{width:270px;background:rgba(44,44,46,.97);border-radius:14px;text-align:center;overflow:hidden;transform:scale(1.15);transition:transform .25s}
+.alertbg.open .alert{transform:scale(1)}
+.al-body{padding:20px 16px 18px}
+.al-ic{font-size:34px;line-height:1;margin-bottom:8px}
+.al-title{font-size:17px;font-weight:600}
+.al-msg{font-size:13px;margin-top:4px;line-height:1.35}
+.al-btns{display:flex;border-top:.5px solid var(--sep)}
+.al-btns button{flex:1;height:44px;border:0;background:none;color:var(--blue);font-size:17px}
+.al-btns button+button{border-left:.5px solid var(--sep);font-weight:600}
+.al-btns button:active{background:rgba(255,255,255,.08)}
+
+/* ---------- portrait ---------- */
+@media (orientation:portrait){
+  .dash{grid-template-columns:1fr 1fr;grid-template-rows:auto auto 1fr auto;
+    grid-template-areas:"clock clock" "wx wx" "timers rem" "scenes scenes"}
+  .c-time{font-size:112px}
+  .wx-cols{flex-direction:row}
+  .wx-cols>div{flex:1;min-width:0;display:flex;flex-direction:column}
+  .wx-cols>div+div{margin-left:24px}
+  .drow{height:33px}
+  .sb-time{font-size:180px;letter-spacing:-7px}
+}
+</style>
+</head>
+<body>
+<div id="wall"></div>
+
+<div class="dash" id="dash">
+  <!-- lock-screen clock -->
+  <div id="clockW">
+    <div id="clockTap">
+      <div class="c-date" id="date"></div>
+      <div class="c-time" id="time">--:--</div>
+    </div>
+    <button class="more press" id="settingsBtn" aria-label="Settings">
+      <svg width="20" height="6" viewBox="0 0 20 6"><circle cx="3" cy="3" r="2.4" fill="#fff"/><circle cx="10" cy="3" r="2.4" fill="#fff"/><circle cx="17" cy="3" r="2.4" fill="#fff"/></svg>
+    </button>
+  </div>
+
+  <!-- weather -->
+  <section class="w wx" id="wxW">
+    <div class="sky" id="sky"></div>
+    <div class="wx-top">
+      <div>
+        <div class="wx-city"><span id="city">Weather</span>
+          <svg width="11" height="11" viewBox="0 0 24 24"><path d="M22 2 2 10.6l8.2 3.2L13.4 22z" fill="#fff"/></svg></div>
+        <div class="wx-temp" id="wxTemp">--°</div>
+      </div>
+      <div class="wx-right">
+        <div class="wx-icon" id="wxIcon">⛅</div>
+        <div class="wx-desc" id="wxDesc">Loading…</div>
+        <div class="wx-hl" id="wxHL"></div>
+        <div class="wx-sub" id="wxSub"></div>
+      </div>
+    </div>
+    <div class="pills" id="pills"></div>
+    <div class="alertline hidden" id="alertLine"></div>
+    <div class="wx-cols">
+      <div>
+        <div class="wx-sec">Hourly forecast</div>
+        <div class="hourly" id="hourly"></div>
+      </div>
+      <div>
+        <div class="wx-sec">6-day forecast</div>
+        <div class="daily scroll" id="daily"></div>
+        <div class="wx-foot"><span id="sunTimes"></span><span class="upd"><i class="spin" id="spin">↻</i> <span id="updText"></span></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- timers -->
+  <section class="w" id="timerW">
+    <div class="w-h"><span class="ic" style="background:var(--orange)">
+      <svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="8" fill="none" stroke="#fff" stroke-width="2.6"/><path d="M12 13.5V9.5M9.5 2.5h5" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>
+    </span>Timers</div>
+    <div class="presets" id="presets"></div>
+    <div class="scroll" id="timers"></div>
+  </section>
+
+  <!-- reminders -->
+  <section class="w" id="remW">
+    <div class="w-h"><span class="ic" style="background:var(--blue)">
+      <svg width="14" height="14" viewBox="0 0 24 24"><g fill="#fff"><circle cx="4" cy="5" r="2.3"/><circle cx="4" cy="12" r="2.3"/><circle cx="4" cy="19" r="2.3"/><rect x="9" y="3.6" width="13" height="2.8" rx="1.4"/><rect x="9" y="10.6" width="13" height="2.8" rx="1.4"/><rect x="9" y="17.6" width="13" height="2.8" rx="1.4"/></g></svg>
+    </span>Reminders<span class="right"><button class="clearbtn hidden" id="clearDone" type="button">Clear</button><span class="count" id="remCount">0</span></span></div>
+    <div class="scroll"><ul id="remList"></ul></div>
+    <form class="newrem" id="remForm" autocomplete="off">
+      <span class="plus"></span><input id="remInput" placeholder="New Reminder" maxlength="120">
+    </form>
+  </section>
+
+  <!-- scenes -->
+  <section id="scenesW">
+    <div class="sec-title">Scenes</div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+</div>
+
+<!-- StandBy -->
+<div class="standby hidden" id="standby">
+  <div class="sb-inner" id="sbInner">
+    <div class="sb-date" id="sbDate"></div>
+    <div class="sb-time" id="sbTime"></div>
+    <div class="sb-wx" id="sbWx"></div>
+  </div>
+</div>
+
+<div class="dim" id="dim"></div>
+
+<!-- Settings -->
+<div class="modal hidden" id="settings">
+  <div class="sheet">
+    <div class="nav">Settings<button class="done" id="setDone" type="button">Done</button></div>
+    <div class="sbody">
+      <div class="gh">Weather</div>
+      <div class="group">
+        <div class="cell">Location<span class="val" id="curPlace">Not set</span></div>
+        <form class="cell" id="geoForm" autocomplete="off">
+          <svg class="lead" width="17" height="17" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7" fill="none" stroke="rgba(235,235,245,.6)" stroke-width="2.6"/><path d="M15.5 15.5 22 22" stroke="rgba(235,235,245,.6)" stroke-width="2.6" stroke-linecap="round"/></svg>
+          <input class="ein" id="geoInput" type="search" placeholder="Search for a city">
+        </form>
+        <div class="cell link tap" id="useLoc">
+          <svg class="lead" width="16" height="16" viewBox="0 0 24 24"><path d="M22 2 2 10.6l8.2 3.2L13.4 22z" fill="#0a84ff"/></svg>Use Current Location</div>
+        <div class="cell">Temperature
+          <div class="seg" data-key="units"><button data-v="c" type="button">°C</button><button data-v="f" type="button">°F</button></div></div>
+        <div class="cell">Animated Weather<label class="sw"><input type="checkbox" id="fxOn"><span></span></label></div>
+      </div>
+      <div class="group hidden" id="geoResults" style="margin-top:10px"></div>
+      <div class="gf" id="geoMsg">Search for your city, then tap it in the list.</div>
+
+      <div class="gh">Clock</div>
+      <div class="group">
+        <div class="cell">24-Hour Time<label class="sw"><input type="checkbox" id="clock24"><span></span></label></div>
+        <div class="cell">StandBy After
+          <div class="seg" data-key="idleMin"><button data-v="0" type="button">Off</button><button data-v="2" type="button">2 min</button><button data-v="5" type="button">5 min</button><button data-v="15" type="button">15 min</button></div></div>
+      </div>
+      <div class="gf">StandBy shows a big clock after the screen hasn't been touched for a while. Tap the clock to show it any time.</div>
+
+      <div class="gh">Night Mode</div>
+      <div class="group">
+        <div class="cell">Dim at Night<label class="sw"><input type="checkbox" id="nightOn"><span></span></label></div>
+        <div class="cell tap">From<span class="val" id="nightStartVal"></span><span class="chev">›</span><select id="nightStart"></select></div>
+        <div class="cell tap">To<span class="val" id="nightEndVal"></span><span class="chev">›</span><select id="nightEnd"></select></div>
+      </div>
+      <div class="gf">At night the screen dims and StandBy turns red, like on iPhone.</div>
+
+      <div class="gh">Scenes</div>
+      <div class="group" id="sceneRows"></div>
+      <div class="group" style="margin-top:10px">
+        <div class="cell link tap" id="addScene"><span class="addc"></span>Add Scene</div>
+      </div>
+      <div class="gf">Each tile runs a shortcut from the Shortcuts app. Type the shortcut's name exactly as it appears there. Name on the left, shortcut on the right.</div>
+
+      <div class="gh">Wallpaper</div>
+      <div class="group"><div class="swatches" id="swatches"></div></div>
+
+      <div class="gf" style="margin-top:26px">Tip: in Safari, tap Share → Add to Home Screen and open it from the icon to run full-screen. Set Settings → Display &amp; Brightness → Auto-Lock to Never so the screen stays on.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Timer alert -->
+<div class="alertbg hidden" id="alarm">
+  <div class="alert">
+    <div class="al-body">
+      <div class="al-ic">⏰</div>
+      <div class="al-title">Timer</div>
+      <div class="al-msg" id="alarmText">Your timer is done.</div>
+    </div>
+    <div class="al-btns"><button id="alarmRepeat" type="button">Repeat</button><button id="alarmStop" type="button">Stop</button></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- helpers ---------- */
+  function $(id) { return document.getElementById(id); }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function trim(s) { return s.replace(/^\s+|\s+$/g, ''); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function setText(el, v) { if (el._v !== v) { el.textContent = v; el._v = v; } }
+  var store = {
+    get: function (k, d) {
+      try { var v = localStorage.getItem('hv.' + k); return v === null ? d : JSON.parse(v); }
+      catch (e) { return d; }
+    },
+    set: function (k, v) { try { localStorage.setItem('hv.' + k, JSON.stringify(v)); } catch (e) {} }
+  };
+  function openM(el) { el.classList.remove('hidden'); void el.offsetWidth; el.classList.add('open'); }
+  function closeM(el) {
+    el.classList.remove('open');
+    setTimeout(function () { if (!el.classList.contains('open')) el.classList.add('hidden'); }, 380);
+  }
+  function isShown(el) { return !el.classList.contains('hidden'); }
+
+  var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
+    'September', 'October', 'November', 'December'];
+
+  if (navigator.standalone) document.documentElement.className += ' standalone';
+
+  /* ---------- wallpapers ---------- */
+  function blob(x, y, rgb, size) {
+    return 'radial-gradient(circle at ' + x + ' ' + y + ', rgba(' + rgb + ',.95) 0, rgba(' + rgb + ',0) ' + size + ')';
+  }
+  var WALLS = {
+    dusk:  { dot: '#ff7a59', bg: [blob('12%', '18%', '255,122,89', '45%'), blob('88%', '25%', '123,92,255', '50%'), blob('55%', '105%', '255,61,119', '55%'), 'linear-gradient(160deg,#241a5c,#0c0a22)'] },
+    ocean: { dot: '#2fa8ff', bg: [blob('15%', '15%', '47,168,255', '45%'), blob('90%', '35%', '0,199,190', '45%'), blob('40%', '110%', '88,86,214', '55%'), 'linear-gradient(160deg,#0b2a5b,#06122a)'] },
+    meadow:{ dot: '#34c759', bg: [blob('10%', '20%', '52,199,89', '45%'), blob('85%', '20%', '255,214,10', '40%'), blob('60%', '110%', '0,150,136', '55%'), 'linear-gradient(160deg,#103d2b,#071a12)'] },
+    rose:  { dot: '#ff6b9a', bg: [blob('15%', '20%', '255,107,154', '45%'), blob('85%', '30%', '255,159,10', '42%'), blob('45%', '110%', '191,90,242', '55%'), 'linear-gradient(160deg,#4a1734,#1a0712)'] },
+    graphite: { dot: '#8e8e93', bg: [blob('15%', '15%', '120,120,135', '50%'), blob('85%', '90%', '72,72,90', '55%'), 'linear-gradient(160deg,#2c2c2e,#0e0e10)'] }
+  };
+
+  /* ---------- settings ---------- */
+  var DEFAULTS = {
+    place: null, units: 'c', clock24: false, fxOn: true, idleMin: 5, nightOn: true, nightStart: 22, nightEnd: 6, wallpaper: 'dusk',
+    scenes: [
+      { label: 'Good Morning', shortcut: 'Good Morning' },
+      { label: 'Lights Off', shortcut: 'Lights Off' },
+      { label: 'Movie Time', shortcut: 'Movie Time' },
+      { label: 'Leaving Home', shortcut: 'Leaving Home' }
+    ]
+  };
+  var saved = store.get('settings', {});
+  if (saved.nightOn === undefined && saved.nightStart !== undefined) saved.nightOn = saved.nightStart !== saved.nightEnd;
+  var settings = Object.assign({}, DEFAULTS, saved);
+  if (!WALLS[settings.wallpaper]) settings.wallpaper = 'dusk';
+
+  function applyWall(name) { $('wall').style.background = WALLS[name].bg.join(','); }
+  applyWall(settings.wallpaper);
+
+  /* ---------- clock ---------- */
+  function fmtClock(h, m) {
+    if (settings.clock24) return { t: pad(h) + ':' + pad(m), ap: '' };
+    return { t: (h % 12 || 12) + ':' + pad(m), ap: h < 12 ? 'AM' : 'PM' };
+  }
+  function fmtFull(h, m) { var c = fmtClock(h, m); return c.t + (c.ap ? ' ' + c.ap : ''); }
+  function fmtHM(str) { var hm = str.slice(11, 16).split(':'); return fmtFull(+hm[0], +hm[1]); }
+  function fmtHour(h) { return settings.clock24 ? pad(h) : (h % 12 || 12) + (h < 12 ? 'AM' : 'PM'); }
+
+  var lastTouch = Date.now(), standbyOpen = false, lastShiftMin = -1;
+
+  function isNight(h) {
+    if (!settings.nightOn) return false;
+    var s = +settings.nightStart, e = +settings.nightEnd;
+    if (s === e) return false;
+    return s > e ? (h >= s || h < e) : (h >= s && h < e);
+  }
+
+  function tick() {
+    var d = new Date();
+    var c = fmtClock(d.getHours(), d.getMinutes());
+    var dateStr = DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()];
+    setText($('time'), c.t);           // iOS lock screen shows no AM/PM
+    setText($('date'), dateStr);
+    var night = isNight(d.getHours());
+
+    if (standbyOpen) {
+      setText($('sbTime'), c.t);
+      setText($('sbDate'), DAYS[d.getDay()].slice(0, 3) + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()].slice(0, 3));
+      $('standby').classList.toggle('red', night);
+      if (d.getMinutes() !== lastShiftMin) { // nudge a little each minute
+        lastShiftMin = d.getMinutes();
+        var x = Math.round(Math.random() * 50 - 25), y = Math.round(Math.random() * 30 - 15);
+        $('sbInner').style.transform = 'translate(' + x + 'px,' + y + 'px)';
+      }
+    }
+
+    var now = Date.now();
+    var busy = isShown($('settings')) || isShown($('alarm'));
+    if (!standbyOpen && !busy && settings.idleMin > 0 && now - lastTouch > settings.idleMin * 60000) showStandby();
+    $('dim').classList.toggle('on', night && !standbyOpen && now - lastTouch > 60000 && !isShown($('alarm')));
+
+    // pause the sky animation when nobody can see it
+    document.documentElement.classList.toggle('fx-paused', standbyOpen || $('dim').classList.contains('on') || isShown($('settings')));
+    updateAgo();
+    updateTimers();
+  }
+
+  function showStandby() {
+    standbyOpen = true; lastShiftMin = -1;
+    $('standby').classList.remove('hidden');
+    tick();
+  }
+  function hideStandby() { standbyOpen = false; $('standby').classList.add('hidden'); }
+  $('clockTap').addEventListener('click', showStandby);
+  $('standby').addEventListener('click', function () {
+    lastTouch = Date.now(); hideStandby();
+    if (Date.now() - lastFetch > 2 * 60000) loadWeather();
+  });
+
+  function touched() { lastTouch = Date.now(); $('dim').classList.remove('on'); }
+  document.addEventListener('touchstart', touched, true);   // also enables :active on iOS
+  document.addEventListener('mousedown', touched, true);
+  document.addEventListener('touchmove', function (e) {
+    var t = e.target;
+    if (!(t.closest && t.closest('.scroll, .sbody'))) e.preventDefault();
+  }, { passive: false });
+
+  /* ---------- weather (Open-Meteo, no key needed) ---------- */
+  var WMO = {
+    0: ['Clear', '☀️', '🌙'], 1: ['Mostly Clear', '🌤', '🌙'], 2: ['Partly Cloudy', '⛅', '☁️'],
+    3: ['Cloudy', '☁️'], 45: ['Fog', '🌫'], 48: ['Freezing Fog', '🌫'],
+    51: ['Drizzle', '🌦', '🌧'], 53: ['Drizzle', '🌦', '🌧'], 55: ['Heavy Drizzle', '🌧'],
+    56: ['Freezing Drizzle', '🌧'], 57: ['Freezing Drizzle', '🌧'],
+    61: ['Light Rain', '🌦', '🌧'], 63: ['Rain', '🌧'], 65: ['Heavy Rain', '🌧'],
+    66: ['Freezing Rain', '🌧'], 67: ['Freezing Rain', '🌧'],
+    71: ['Light Snow', '🌨'], 73: ['Snow', '🌨'], 75: ['Heavy Snow', '❄️'], 77: ['Snow', '🌨'],
+    80: ['Showers', '🌦', '🌧'], 81: ['Showers', '🌧'], 82: ['Heavy Showers', '⛈'],
+    85: ['Snow Showers', '🌨'], 86: ['Snow Showers', '🌨'],
+    95: ['Thunderstorms', '⛈'], 96: ['Thunderstorms', '⛈'], 99: ['Thunderstorms', '⛈']
+  };
+  function wx(code, isDay) {
+    var e = WMO[code] || ['—', '🌡'];
+    return { desc: e[0], icon: (!isDay && e[2]) ? e[2] : e[1] };
+  }
+  function sky(code, isDay) {
+    var g;
+    if (code >= 95) g = ['#2c3440', '#4a5361'];
+    else if ((code >= 71 && code <= 77) || code === 85 || code === 86) g = isDay ? ['#7d93ab', '#b2c2d3'] : ['#2a3646', '#4b5a6d'];
+    else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) g = isDay ? ['#4f6378', '#7a8ea3'] : ['#1f2a38', '#3a4a5d'];
+    else if (code === 2) g = isDay ? ['#3f7fc2', '#7fa9d4'] : ['#14203a', '#33456a'];
+    else if (code === 3 || code === 45 || code === 48) g = isDay ? ['#62778e', '#93a5b8'] : ['#1d2532', '#3b4758'];
+    else g = isDay ? ['#2f7fd8', '#62aef0'] : ['#0b1736', '#27397a'];
+    return 'linear-gradient(180deg,' + g[0] + ',' + g[1] + ')';
+  }
+  // iOS Weather-style temperature colours (by °C)
+  var TSTOPS = [[-5, [94, 92, 230]], [5, [100, 210, 255]], [13, [99, 230, 190]], [20, [184, 224, 90]],
+    [26, [255, 214, 10]], [32, [255, 159, 10]], [40, [255, 69, 58]]];
+  function tColor(v) {
+    var c = settings.units === 'f' ? (v - 32) * 5 / 9 : v;
+    if (c <= TSTOPS[0][0]) c = TSTOPS[0][0];
+    for (var i = 1; i < TSTOPS.length; i++) {
+      if (c <= TSTOPS[i][0] || i === TSTOPS.length - 1) {
+        var a = TSTOPS[i - 1], b = TSTOPS[i], f = Math.max(0, Math.min(1, (c - a[0]) / (b[0] - a[0])));
+        return 'rgb(' + [0, 1, 2].map(function (k) { return Math.round(a[1][k] + (b[1][k] - a[1][k]) * f); }).join(',') + ')';
+      }
+    }
+  }
+  function placeKey() { var p = settings.place; return p ? 'v3,' + p.lat + ',' + p.lon + ',' + settings.units : ''; }
+  function parseDay(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+
+  /* ---------- live weather tile ---------- */
+  var reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var wxState = { data: null, t: 0, aq: null, fxKey: '' };
+  var lastFetch = 0, fetching = false;
+
+  function speed(v) { return Math.round(v) + (settings.units === 'f' ? ' mph' : ' km/h'); }
+  function toC(v) { return settings.units === 'f' ? (v - 32) * 5 / 9 : v; }
+  function uvLabel(u) { return u < 3 ? 'Low' : u < 6 ? 'Moderate' : u < 8 ? 'High' : u < 11 ? 'V. High' : 'Extreme'; }
+  function aqiInfo(a) { // US AQI scale
+    if (a <= 50) return ['Good', '#30d158'];
+    if (a <= 100) return ['Moderate', '#ffd60a'];
+    if (a <= 150) return ['Poor', '#ff9f0a'];
+    if (a <= 200) return ['Unhealthy', '#ff453a'];
+    if (a <= 300) return ['Very Unhealthy', '#bf5af2'];
+    return ['Hazardous', '#a2132f'];
+  }
+  function atHour(ts) {
+    var h = +ts.slice(11, 13);
+    return 'around ' + (settings.clock24 ? pad(h) + ':00' : (h % 12 || 12) + ' ' + (h < 12 ? 'AM' : 'PM'));
+  }
+  function hourIdx(times, cur) {
+    var key = cur.slice(0, 13);
+    for (var i = 0; i < times.length; i++) if (times[i].slice(0, 13) === key) return i;
+    return 0;
+  }
+  function mins(slots) {
+    var n = slots * 15;
+    if (n < 60) return n + ' min';
+    return Math.floor(n / 60) + ' hr' + (n % 60 ? ' ' + (n % 60) + ' min' : '');
+  }
+
+  // "Rain starting in about 30 min" from the 15-minute forecast (next 2 hours)
+  function nowcast(d) {
+    var m = d.minutely_15, c = d.current;
+    if (!m || !m.time || !m.precipitation) return '';
+    var key = c.time.slice(0, 16), i0 = -1;
+    for (var i = 0; i < m.time.length; i++) { if (m.time[i] >= key) { i0 = i; break; } }
+    if (i0 < 0) return '';
+    var end = Math.min(m.time.length, i0 + 9);
+    function wet(k) { return m.precipitation[k] >= 0.1; }
+    if (wet(i0)) {
+      for (var j = i0 + 1; j < end; j++) if (!wet(j)) return '🌧 Rain stopping in about ' + mins(j - i0);
+      return '🌧 Rain continuing for the next 2 hours';
+    }
+    for (var k = i0 + 1; k < end; k++) if (wet(k)) return '🌂 Rain starting in about ' + mins(k - i0);
+    return '';
+  }
+
+  // Warnings worked out from the forecast (not official alerts)
+  function warnings(d, aq) {
+    var c = d.current, h = d.hourly, dl = d.daily, out = [], i;
+    var i0 = hourIdx(h.time, c.time), end = Math.min(h.time.length, i0 + 12);
+    for (i = i0; i < end; i++) {
+      if (h.weather_code[i] >= 95) { out.push('⚡ Thunderstorms likely ' + (i === i0 ? 'now' : atHour(h.time[i]))); break; }
+    }
+    if (h.precipitation) for (i = i0; i < end; i++) {
+      if (h.precipitation[i] >= 7.6) { out.push('🌧 Heavy rain ' + (i === i0 ? 'now' : 'expected ' + atHour(h.time[i]))); break; }
+    }
+    if (h.wind_gusts_10m) for (i = i0; i < end; i++) {
+      if (h.wind_gusts_10m[i] >= (settings.units === 'f' ? 37 : 60)) {
+        out.push('💨 Strong winds, gusts up to ' + speed(h.wind_gusts_10m[i]) + ' ' + atHour(h.time[i])); break;
+      }
+    }
+    if (toC(dl.temperature_2m_max[0]) >= 40) out.push('🌡 Extreme heat today, up to ' + Math.round(dl.temperature_2m_max[0]) + '°');
+    if (toC(dl.temperature_2m_min[0]) <= 2) out.push('❄️ Near freezing, down to ' + Math.round(dl.temperature_2m_min[0]) + '°');
+    if (aq && aq.current && aq.current.us_aqi > 200) out.push('😷 Very poor air. Keep windows closed');
+    return out;
+  }
+
+  /* animated sky behind the card */
+  function fxKind(code, isDay) {
+    if (code >= 95) return 'storm';
+    if ((code >= 71 && code <= 77) || code === 85 || code === 86) return 'snow';
+    if (code === 65 || code === 67 || code === 82) return 'rainH';
+    if ((code >= 61 && code <= 66) || code === 80 || code === 81) return 'rain';
+    if (code >= 51 && code <= 57) return 'drizzle';
+    if (code === 45 || code === 48) return 'fog';
+    if (code === 3) return 'overcast';
+    if (code === 2) return isDay ? 'partlyD' : 'partlyN';
+    return isDay ? 'clearD' : 'clearN';
+  }
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+  function buildSky(kind, isDay) {
+    var h = '', i, dk = isDay ? 1 : 0.55;
+    if (settings.fxOn === false || reduceMotion) { $('sky').innerHTML = ''; return; }
+    function clouds(n, op) {
+      for (var j = 0; j < n; j++) h += '<i class="cloud" style="top:' + rnd(-50, 150).toFixed(0) + 'px;left:' + rnd(-140, 240).toFixed(0) +
+        'px;opacity:' + (op * dk).toFixed(2) + ';animation-duration:' + rnd(35, 60).toFixed(0) + 's;animation-delay:-' + rnd(0, 30).toFixed(0) + 's"></i>';
+    }
+    function fall(n, cls, a, b) {
+      for (var j = 0; j < n; j++) h += '<i class="' + cls + '" style="left:' + rnd(-5, 115).toFixed(1) + '%;animation-duration:' +
+        rnd(a, b).toFixed(2) + 's;animation-delay:-' + rnd(0, b).toFixed(2) + 's"></i>';
+    }
+    if (kind === 'clearD' || kind === 'partlyD') h += '<i class="sunglow"></i>';
+    if (kind === 'clearN' || kind === 'partlyN') {
+      for (i = 0; i < 22; i++) h += '<i class="star" style="top:' + rnd(2, 50).toFixed(1) + '%;left:' + rnd(2, 98).toFixed(1) +
+        '%;animation-delay:-' + rnd(0, 4).toFixed(1) + 's"></i>';
+    }
+    if (kind === 'partlyD') clouds(2, 0.8);
+    if (kind === 'partlyN') clouds(2, 0.45);
+    if (kind === 'overcast') clouds(4, 0.9);
+    if (kind === 'fog') clouds(6, 1);
+    if (kind === 'drizzle') { clouds(2, 0.6); fall(14, 'drop', 1, 1.4); }
+    if (kind === 'rain') { clouds(3, 0.6); fall(28, 'drop', 0.7, 1); }
+    if (kind === 'rainH' || kind === 'storm') { clouds(3, 0.7); fall(42, 'drop', 0.55, 0.8); }
+    if (kind === 'storm') h += '<i class="flash"></i>';
+    if (kind === 'snow') { clouds(2, 0.6); fall(26, 'flake', 5, 9); }
+    $('sky').innerHTML = h;
+  }
+
+  function renderPills(d, aq) {
+    var c = d.current, dl = d.daily, html = '';
+    if (aq && aq.current && aq.current.us_aqi != null) {
+      var a = Math.round(aq.current.us_aqi), inf = aqiInfo(a);
+      html += '<span class="pill2"><i style="background:' + inf[1] + '"></i>AQI ' + a + ' ' + inf[0] + '</span>';
+    }
+    if (c.wind_speed_10m != null) html += '<span class="pill2">💨 ' + speed(c.wind_speed_10m) + '</span>';
+    if (dl.uv_index_max && dl.uv_index_max[0] != null) {
+      var u = dl.uv_index_max[0];
+      html += '<span class="pill2">UV ' + Math.round(u) + (u >= 6 ? ' ' + uvLabel(u) : '') + '</span>';
+    }
+    html += '<span class="pill2">💧 ' + Math.round(c.relative_humidity_2m) + '%</span>';
+    var box = $('pills');
+    box.innerHTML = html;
+    // drop pills that don't fit on one line, rather than cutting one off
+    var kids = box.children, maxR = box.offsetWidth;
+    for (var i = kids.length - 1; i > 0; i--) {
+      if (kids[i].offsetLeft + kids[i].offsetWidth > maxR + 3) box.removeChild(kids[i]);
+    }
+  }
+
+  function updateAgo() {
+    if (fetching) return;
+    if (!wxState.t) { setText($('updText'), ''); return; }
+    var m = Math.floor((Date.now() - wxState.t) / 60000), up = new Date(wxState.t);
+    var txt = m < 1 ? 'Updated just now' : m < 60 ? 'Updated ' + m + ' min ago' : 'Updated ' + fmtFull(up.getHours(), up.getMinutes());
+    setText($('updText'), (m >= 30 ? '⚠︎ ' : '') + txt);
+  }
+
+  function renderWeather() {
+    var d = wxState.data;
+    if (!d || !d.current || !d.daily || !d.hourly) return;
+    var c = d.current, dl = d.daily, hr = d.hourly;
+    var w = wx(c.weather_code, c.is_day);
+    $('wxW').style.background = sky(c.weather_code, c.is_day);
+    setText($('city'), settings.place ? settings.place.name : 'Weather');
+    setText($('wxTemp'), Math.round(c.temperature_2m) + '°');
+    setText($('wxIcon'), w.icon);
+    setText($('wxDesc'), w.desc);
+    setText($('wxHL'), 'H:' + Math.round(dl.temperature_2m_max[0]) + '°  L:' + Math.round(dl.temperature_2m_min[0]) + '°');
+    setText($('wxSub'), 'Feels like ' + Math.round(c.apparent_temperature) + '°');
+    renderPills(d, wxState.aq);
+
+    // one live line: a warning if there is one, otherwise the rain outlook
+    var warn = warnings(d, wxState.aq), rain = nowcast(d), line = $('alertLine');
+    if (warn.length) {
+      line.className = 'alertline warn';
+      line.innerHTML = esc(warn[0]) + (warn.length > 1 ? ' <small>+' + (warn.length - 1) + ' more</small>' : '');
+    } else if (rain) {
+      line.className = 'alertline';
+      line.textContent = rain;
+    } else {
+      line.className = 'alertline hidden';
+    }
+    var sbLine = w.icon + ' ' + Math.round(c.temperature_2m) + '°  ' + w.desc;
+    setText($('sbWx'), warn.length ? sbLine + '  ·  ' + warn[0] : rain ? sbLine + '  ·  ' + rain : sbLine);
+
+    // hourly: next 6 hours
+    var start = hourIdx(hr.time, c.time), h = '';
+    for (var k = start; k < start + 6 && k < hr.time.length; k++) {
+      var hw = wx(hr.weather_code[k], hr.is_day[k]);
+      var pp = hr.precipitation_probability ? hr.precipitation_probability[k] : 0;
+      h += '<div class="hr"><div class="t">' + (k === start ? 'Now' : fmtHour(+hr.time[k].slice(11, 13))) +
+        '</div><div class="i">' + hw.icon + '</div><div class="p">' + (pp >= 30 ? pp + '%' : '') + '</div><div>' +
+        Math.round(k === start ? c.temperature_2m : hr.temperature_2m[k]) + '°</div></div>';
+    }
+    $('hourly').innerHTML = h;
+
+    // daily with temperature bars
+    var lo = Math.min.apply(null, dl.temperature_2m_min), hi = Math.max.apply(null, dl.temperature_2m_max);
+    var span = (hi - lo) || 1, html = '';
+    for (var i = 0; i < dl.time.length; i++) {
+      var dw = wx(dl.weather_code[i], true);
+      var mn = dl.temperature_2m_min[i], mx = dl.temperature_2m_max[i];
+      var rp = dl.precipitation_probability_max ? dl.precipitation_probability_max[i] : 0;
+      var name = i === 0 ? 'Today' : DAYS[parseDay(dl.time[i]).getDay()].slice(0, 3);
+      var dot = '';
+      if (i === 0) {
+        var cur = Math.max(mn, Math.min(mx, c.temperature_2m));
+        dot = '<b style="left:' + ((cur - lo) / span * 100).toFixed(1) + '%"></b>';
+      }
+      html += '<div class="drow"><div class="dname">' + name + '</div><div class="dicon">' + dw.icon +
+        (rp >= 30 ? '<small>' + rp + '%</small>' : '') + '</div>' +
+        '<div class="dlo">' + Math.round(mn) + '°</div>' +
+        '<div class="dbar"><i style="left:' + ((mn - lo) / span * 100).toFixed(1) + '%;width:' +
+        Math.max(4, (mx - mn) / span * 100).toFixed(1) + '%;background:linear-gradient(90deg,' + tColor(mn) + ',' + tColor(mx) + ')"></i>' + dot + '</div>' +
+        '<div class="dhi">' + Math.round(mx) + '°</div></div>';
+    }
+    $('daily').innerHTML = html;
+    setText($('sunTimes'), '☀︎ ' + fmtHM(dl.sunrise[0]) + '   ☾ ' + fmtHM(dl.sunset[0]));
+
+    var kind = fxKind(c.weather_code, c.is_day) + (settings.fxOn === false ? '-off' : '');
+    if (kind !== wxState.fxKey) { wxState.fxKey = kind; buildSky(fxKind(c.weather_code, c.is_day), c.is_day); }
+    updateAgo();
+  }
+
+  function getJSON(url) {
+    return fetch(url).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+  }
+  function loadWeather(manual) {
+    var p = settings.place;
+    if (!p) {
+      setText($('city'), 'Weather'); setText($('wxTemp'), '--°'); setText($('wxIcon'), '📍');
+      setText($('wxDesc'), 'No location'); setText($('wxHL'), ''); setText($('wxSub'), 'Tap ••• to set one');
+      $('hourly').innerHTML = ''; $('pills').innerHTML = ''; $('alertLine').className = 'alertline hidden';
+      $('daily').innerHTML = '<div class="muted" style="color:rgba(255,255,255,.75)">Choose your city in Settings to see the forecast.</div>';
+      setText($('sunTimes'), ''); setText($('updText'), '');
+      return;
+    }
+    if (fetching) return;
+    fetching = true; lastFetch = Date.now();
+    $('spin').classList.add('on');
+    if (manual) setText($('updText'), 'Updating…');
+    var key = placeKey(), f = settings.units === 'f';
+    var base = 'https://api.open-meteo.com/v1/forecast?latitude=' + p.lat + '&longitude=' + p.lon + '&timezone=auto&forecast_days=6' +
+      (f ? '&temperature_unit=fahrenheit&wind_speed_unit=mph' : '');
+    var full = base +
+      '&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day,wind_speed_10m,precipitation' +
+      '&minutely_15=precipitation&forecast_minutely_15=12' +
+      '&hourly=temperature_2m,weather_code,is_day,precipitation_probability,precipitation,wind_gusts_10m' +
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max';
+    var basic = base +   // fallback if the richer request is ever refused
+      '&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day' +
+      '&hourly=temperature_2m,weather_code,is_day' +
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset';
+    var aqUrl = 'https://air-quality-api.open-meteo.com/v1/air-quality?latitude=' + p.lat + '&longitude=' + p.lon +
+      '&current=us_aqi,pm2_5&timezone=auto';
+    var wP = getJSON(full).catch(function () { return getJSON(basic); });
+    var aP = getJSON(aqUrl).catch(function () { return null; });
+    Promise.all([wP, aP]).then(function (r) {
+      if (key !== placeKey()) return;
+      wxState.data = r[0]; wxState.t = Date.now();
+      if (r[1]) wxState.aq = r[1];
+      store.set('wx', { key: key, t: wxState.t, data: wxState.data, aq: wxState.aq });
+      fetching = false;
+      renderWeather();
+    }).catch(function () {
+      fetching = false;
+      if (!wxState.data) { setText($('wxDesc'), 'Unavailable'); setText($('wxSub'), 'Retrying soon'); }
+      lastFetch = Date.now() - 4 * 60000; // try again in about a minute
+    }).then(function () {
+      fetching = false;
+      $('spin').classList.remove('on');
+      updateAgo();
+    });
+  }
+  // show the last forecast straight away, then refresh
+  (function () {
+    var c = store.get('wx', null);
+    if (c && c.key === placeKey() && c.data) {
+      wxState.data = c.data; wxState.t = c.t; wxState.aq = c.aq || null;
+      try { renderWeather(); } catch (e) {}
+    }
+  })();
+  // live: every 5 minutes while the screen is on, and right away when it wakes
+  setInterval(function () { if (!document.hidden && Date.now() - lastFetch > 5 * 60000) loadWeather(); }, 30000);
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && Date.now() - lastFetch > 2 * 60000) loadWeather();
+  });
+  $('wxW').addEventListener('click', function () {
+    if (Date.now() - lastFetch > 15000) loadWeather(true);
+  });
+
+  /* ---------- sound ---------- */
+  var actx = null;
+  function unlockAudio() {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try {
+      if (!actx) {
+        actx = new AC();
+        var b = actx.createBuffer(1, 1, 22050), s = actx.createBufferSource();
+        s.buffer = b; s.connect(actx.destination); s.start(0);
+      } else if (actx.state === 'suspended') { actx.resume(); }
+    } catch (e) {}
+  }
+  document.addEventListener('touchend', unlockAudio, true);
+  document.addEventListener('click', unlockAudio, true);
+  function chime() { // soft two-tone, a bit like the iOS "Radar" pattern
+    if (!actx) return;
+    try {
+      var t = actx.currentTime, notes = [1318.5, 1760, 1318.5, 1760];
+      for (var i = 0; i < notes.length; i++) {
+        var o = actx.createOscillator(), g = actx.createGain(), st = t + i * 0.16;
+        o.type = 'sine'; o.frequency.value = notes[i];
+        g.gain.setValueAtTime(0.0001, st);
+        g.gain.exponentialRampToValueAtTime(0.35, st + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.0001, st + 0.14);
+        o.connect(g); g.connect(actx.destination); o.start(st); o.stop(st + 0.15);
+      }
+    } catch (e) {}
+  }
+
+  /* ---------- timers ---------- */
+  var ICON_PAUSE = '<svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="1" width="3.6" height="12" rx="1" fill="currentColor"/><rect x="8.4" y="1" width="3.6" height="12" rx="1" fill="currentColor"/></svg>';
+  var ICON_PLAY = '<svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 1.3v11.4c0 .6.6.9 1.1.6l8.6-5.7c.4-.3.4-.9 0-1.2L4.1.7C3.6.4 3 .7 3 1.3z" fill="currentColor"/></svg>';
+  var ICON_X = '<svg width="12" height="12" viewBox="0 0 12 12"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+  var RING_C = 2 * Math.PI * 19;
+  var PRESETS = [1, 3, 5, 10, 15, 20, 30, 60];
+  var timers = store.get('timers', []);
+  var timerEls = {}, lastDone = [];
+  function saveTimers() { store.set('timers', timers); }
+  function leftOf(t, now) { return t.paused ? t.left : Math.max(0, t.end - now); }
+  function fmtDur(ms) {
+    var s = Math.ceil(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60;
+    return h ? h + ':' + pad(m) + ':' + pad(ss) : m + ':' + pad(ss);
+  }
+  function addTimer(min, label) {
+    var now = Date.now();
+    timers.push({ id: now + '-' + Math.floor(Math.random() * 1e4), label: label, dur: min * 60000, end: now + min * 60000, fired: false });
+  }
+  PRESETS.forEach(function (min) {
+    var b = document.createElement('button');
+    b.className = 'pill press'; b.type = 'button';
+    b.textContent = min === 60 ? '1 hr' : min + ' min';
+    b.addEventListener('click', function () { addTimer(min, b.textContent); saveTimers(); renderTimers(); });
+    $('presets').appendChild(b);
+  });
+  timers.forEach(function (t) { if (!t.paused && Date.now() - t.end > 10 * 60000) t.fired = true; });
+
+  function renderTimers() {
+    var box = $('timers');
+    box.innerHTML = ''; timerEls = {};
+    if (!timers.length) { box.innerHTML = '<div class="muted">No timers running.</div>'; return; }
+    timers.forEach(function (t) {
+      var row = document.createElement('div');
+      row.className = 'trow';
+      row.innerHTML = '<svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="19" fill="none" stroke="rgba(255,159,10,.22)" stroke-width="4"/>' +
+        '<circle class="prog" cx="22" cy="22" r="19" fill="none" stroke="#ff9f0a" stroke-width="4" stroke-linecap="round" stroke-dasharray="' +
+        RING_C.toFixed(2) + '" transform="rotate(-90 22 22)"/></svg>' +
+        '<div class="tmid"><div class="tlabel">' + esc(t.label) + '</div><div class="tremain"></div></div>' +
+        '<button class="cbtn pause press" type="button"></button><button class="cbtn x press" type="button">' + ICON_X + '</button>';
+      var pb = row.querySelector('.pause');
+      pb.addEventListener('click', function () {
+        var now = Date.now();
+        if (t.paused) { t.end = now + t.left; t.paused = false; }
+        else if (t.end > now) { t.left = t.end - now; t.paused = true; }
+        saveTimers(); updateTimers();
+      });
+      row.querySelector('.x').addEventListener('click', function () {
+        timers = timers.filter(function (x) { return x !== t; });
+        saveTimers(); renderTimers();
+      });
+      box.appendChild(row);
+      timerEls[t.id] = { row: row, remain: row.querySelector('.tremain'), ring: row.querySelector('.prog'), pb: pb };
+    });
+    updateTimers();
+  }
+  function updateTimers() {
+    var now = Date.now(), done = [];
+    timers.forEach(function (t) {
+      var left = leftOf(t, now), e = timerEls[t.id];
+      if (e) {
+        setText(e.remain, left ? fmtDur(left) : 'Done');
+        e.ring.setAttribute('stroke-dashoffset', (RING_C * (1 - (t.dur ? left / t.dur : 0))).toFixed(2));
+        e.row.classList.toggle('paused', !!t.paused);
+        e.pb.style.visibility = left ? 'visible' : 'hidden';
+        var icon = t.paused ? 'play' : 'pause';
+        if (e.pb._icon !== icon) { e.pb.innerHTML = t.paused ? ICON_PLAY : ICON_PAUSE; e.pb._icon = icon; }
+      }
+      if (left === 0 && !t.fired && !t.paused) { t.fired = true; done.push(t); }
+    });
+    if (done.length) { saveTimers(); startAlarm(done); }
+  }
+
+  var alarmIv = null, alarmTo = null;
+  function startAlarm(done) {
+    lastDone = lastDone.concat(done.map(function (t) { return { label: t.label, min: t.dur / 60000 }; }));
+    $('alarmText').textContent = lastDone.length === 1 ? 'Your ' + lastDone[0].label + ' timer is done.' :
+      lastDone.length + ' timers are done.';
+    hideStandby(); $('dim').classList.remove('on');
+    if (!isShown($('alarm'))) openM($('alarm'));
+    if (!alarmIv) { chime(); alarmIv = setInterval(chime, 1500); }
+    clearTimeout(alarmTo);
+    alarmTo = setTimeout(stopSound, 3 * 60000);
+  }
+  function stopSound() { clearInterval(alarmIv); alarmIv = null; }
+  function closeAlarm(repeat) {
+    stopSound(); clearTimeout(alarmTo); closeM($('alarm'));
+    var now = Date.now();
+    timers = timers.filter(function (t) { return t.paused || t.end > now; });
+    if (repeat) lastDone.forEach(function (d) { addTimer(d.min, d.label); });
+    lastDone = [];
+    saveTimers(); renderTimers();
+  }
+  $('alarmStop').addEventListener('click', function () { closeAlarm(false); });
+  $('alarmRepeat').addEventListener('click', function () { closeAlarm(true); });
+
+  /* ---------- reminders ---------- */
+  var todos = store.get('todos', []);
+  function saveTodos() { store.set('todos', todos); }
+  function renderTodos() {
+    var ul = $('remList'), open = 0, anyDone = false;
+    ul.innerHTML = '';
+    todos.forEach(function (it) {
+      if (it.done) anyDone = true; else open++;
+      var li = document.createElement('li');
+      if (it.done) li.className = 'done';
+      li.innerHTML = '<div class="rc"></div><div class="rt">' + esc(it.text) + '</div>';
+      li.addEventListener('click', function () { it.done = !it.done; saveTodos(); renderTodos(); });
+      ul.appendChild(li);
+    });
+    if (!todos.length) ul.innerHTML = '<li class="muted" style="padding-top:2px">No Reminders</li>';
+    setText($('remCount'), String(open));
+    $('clearDone').classList.toggle('hidden', !anyDone);
+  }
+  $('remForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var v = trim($('remInput').value);
+    if (v) { todos.push({ text: v, done: false }); saveTodos(); renderTodos(); }
+    $('remInput').value = ''; $('remInput').blur();
+  });
+  $('clearDone').addEventListener('click', function () {
+    todos = todos.filter(function (t) { return !t.done; });
+    saveTodos(); renderTodos();
+  });
+
+  /* ---------- scenes (Shortcuts app) ---------- */
+  function sceneUrl(name) {
+    var u = 'shortcuts://x-callback-url/run-shortcut?name=' + encodeURIComponent(name);
+    if (!navigator.standalone && /^https?:$/.test(location.protocol)) {
+      u += '&x-success=' + encodeURIComponent(location.href.split('#')[0]);
+    }
+    return u;
+  }
+  function sceneIcon(s) {
+    var n = (s.label + ' ' + s.shortcut).toLowerCase();
+    var rules = [[/leav|away|bye|out\b/, '🚪'], [/arriv|welcome|back|home/, '🏠'], [/movie|tv|film|cinema/, '🍿'],
+      [/morning|wake|sunrise|good day/, '☀️'], [/night|sleep|bed/, '🌙'], [/off/, '🌑'], [/light|lamp|bright/, '💡'],
+      [/fan|ac\b|cool|air/, '❄️'], [/music|party|dance/, '🎵'], [/read|focus|work|study/, '📖'], [/dinner|cook|kitchen/, '🍽'],
+      [/pray|puja|calm|relax/, '🕯']];
+    for (var i = 0; i < rules.length; i++) if (rules[i][0].test(n)) return rules[i][1];
+    return '✨';
+  }
+  function renderScenes() {
+    var box = $('tiles');
+    box.innerHTML = '';
+    var list = settings.scenes || [];
+    $('scenesW').classList.toggle('hidden', !list.length);
+    list.forEach(function (s) {
+      var a = document.createElement('a');
+      a.className = 'tile press';
+      a.href = sceneUrl(s.shortcut);
+      a.innerHTML = '<span class="ti">' + sceneIcon(s) + '</span><span class="tt"><div class="tn">' + esc(s.label || s.shortcut) +
+        '</div></span>';
+      a.addEventListener('click', function (e) {   // light up like the Home app, then run
+        e.preventDefault();
+        a.classList.add('on');
+        setTimeout(function () { location.href = a.href; }, 250);
+        setTimeout(function () { a.classList.remove('on'); }, 2500);
+      });
+      box.appendChild(a);
+    });
+  }
+
+  /* ---------- settings sheet ---------- */
+  var draft = null;
+  function hourOpts(sel) {
+    var o = '';
+    for (var h = 0; h < 24; h++) o += '<option value="' + h + '">' + fmtFull(h, 0) + '</option>';
+    sel.innerHTML = o;
+  }
+  function paintSegs() {
+    var segs = document.querySelectorAll('.seg');
+    for (var i = 0; i < segs.length; i++) {
+      var key = segs[i].getAttribute('data-key'), btns = segs[i].querySelectorAll('button');
+      for (var j = 0; j < btns.length; j++) btns[j].classList.toggle('on', btns[j].getAttribute('data-v') === String(draft[key]));
+    }
+  }
+  (function () {
+    var segs = document.querySelectorAll('.seg');
+    for (var i = 0; i < segs.length; i++) {
+      segs[i].addEventListener('click', function (e) {
+        var b = e.target.closest('button');
+        if (!b) return;
+        var key = this.getAttribute('data-key'), v = b.getAttribute('data-v');
+        draft[key] = key === 'idleMin' ? +v : v;
+        paintSegs();
+      });
+    }
+  })();
+  function paintNight() {
+    var st = $('nightStart'), en = $('nightEnd');
+    $('nightStartVal').textContent = st.options[st.selectedIndex] ? st.options[st.selectedIndex].text : '';
+    $('nightEndVal').textContent = en.options[en.selectedIndex] ? en.options[en.selectedIndex].text : '';
+  }
+  $('nightStart').addEventListener('change', paintNight);
+  $('nightEnd').addEventListener('change', paintNight);
+  $('clock24').addEventListener('change', function () {   // relabel hour pickers in the chosen format
+    var a = $('nightStart').value, b = $('nightEnd').value, keep = settings.clock24;
+    settings.clock24 = this.checked; hourOpts($('nightStart')); hourOpts($('nightEnd')); settings.clock24 = keep;
+    $('nightStart').value = a; $('nightEnd').value = b; paintNight();
+  });
+
+  function paintPlace() { $('curPlace').textContent = draft.place ? draft.place.name : 'Not set'; }
+  function geoMsg(t) { $('geoMsg').textContent = t; }
+  function sceneRow(s) {
+    var row = document.createElement('div');
+    row.className = 'cell';
+    row.innerHTML = '<button class="minus" type="button" aria-label="Remove"></button>' +
+      '<input class="ein s-label" placeholder="Name"><input class="ein s-name" placeholder="Shortcut name">';
+    row.querySelector('.s-label').value = s.label || '';
+    row.querySelector('.s-name').value = s.shortcut || '';
+    row.querySelector('.minus').addEventListener('click', function () { row.parentNode.removeChild(row); });
+    $('sceneRows').appendChild(row);
+  }
+  function paintSwatches() {
+    var box = $('swatches'); box.innerHTML = '';
+    Object.keys(WALLS).forEach(function (k) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'swatch press' + (draft.wallpaper === k ? ' on' : '');
+      b.style.background = WALLS[k].bg.slice(0, 2).concat(WALLS[k].bg[WALLS[k].bg.length - 1]).join(',');
+      b.addEventListener('click', function () { draft.wallpaper = k; applyWall(k); paintSwatches(); });
+      box.appendChild(b);
+    });
+  }
+  function openSettings() {
+    draft = JSON.parse(JSON.stringify(settings));
+    paintSegs(); paintPlace(); paintSwatches();
+    $('geoResults').innerHTML = ''; $('geoResults').classList.add('hidden'); $('geoInput').value = '';
+    geoMsg('Search for your city, then tap it in the list.');
+    $('clock24').checked = !!draft.clock24;
+    $('fxOn').checked = draft.fxOn !== false;
+    $('nightOn').checked = !!draft.nightOn;
+    hourOpts($('nightStart')); hourOpts($('nightEnd'));
+    $('nightStart').value = String(draft.nightStart); $('nightEnd').value = String(draft.nightEnd); paintNight();
+    $('sceneRows').innerHTML = '';
+    (draft.scenes || []).forEach(sceneRow);
+    openM($('settings'));
+  }
+  $('settingsBtn').addEventListener('click', openSettings);
+  $('addScene').addEventListener('click', function () {
+    if ($('sceneRows').children.length < 8) { sceneRow({}); var r = $('sceneRows').lastChild; r.querySelector('.s-label').focus(); }
+  });
+
+  $('geoForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var q = trim($('geoInput').value);
+    if (!q) return;
+    $('geoInput').blur();
+    geoMsg('Searching…');
+    fetch('https://geocoding-api.open-meteo.com/v1/search?count=6&language=en&format=json&name=' + encodeURIComponent(q))
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var res = data.results || [], box = $('geoResults');
+        box.innerHTML = '';
+        box.classList.toggle('hidden', !res.length);
+        geoMsg(res.length ? 'Tap your city.' : 'No places found. Try another spelling.');
+        res.forEach(function (r) {
+          var c = document.createElement('div');
+          c.className = 'cell tap';
+          c.innerHTML = '<span>' + esc(r.name) + '</span><span class="val">' + esc([r.admin1, r.country].filter(Boolean).join(', ')) + '</span>';
+          c.addEventListener('click', function () {
+            draft.place = { name: r.name, lat: +r.latitude.toFixed(3), lon: +r.longitude.toFixed(3) };
+            box.innerHTML = ''; box.classList.add('hidden'); paintPlace(); geoMsg('Location set to ' + r.name + '.');
+          });
+          box.appendChild(c);
+        });
+      })
+      .catch(function () { geoMsg('Couldn\'t search right now. Check the Wi-Fi.'); });
+  });
+  $('useLoc').addEventListener('click', function () {
+    if (!navigator.geolocation) { geoMsg('Location isn\'t available here. Search for your city instead.'); return; }
+    geoMsg('Finding this iPad…');
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      draft.place = { name: 'My Location', lat: +pos.coords.latitude.toFixed(3), lon: +pos.coords.longitude.toFixed(3) };
+      paintPlace(); geoMsg('Using this iPad\'s location.');
+    }, function () {
+      geoMsg('Couldn\'t get the location (it needs an https link). Search for your city instead.');
+    }, { timeout: 15000, maximumAge: 3600000 });
+  });
+
+  $('setDone').addEventListener('click', function () {
+    draft.clock24 = $('clock24').checked;
+    draft.fxOn = $('fxOn').checked;
+    draft.nightOn = $('nightOn').checked;
+    draft.nightStart = +$('nightStart').value;
+    draft.nightEnd = +$('nightEnd').value;
+    var rows = $('sceneRows').children, scenes = [];
+    for (var i = 0; i < rows.length; i++) {
+      var name = trim(rows[i].querySelector('.s-name').value), label = trim(rows[i].querySelector('.s-label').value);
+      if (name || label) scenes.push({ label: label || name, shortcut: name || label });
+    }
+    draft.scenes = scenes;
+    var weatherChanged = JSON.stringify(draft.place) !== JSON.stringify(settings.place) || draft.units !== settings.units;
+    settings = draft; draft = null;
+    store.set('settings', settings);
+    closeM($('settings'));
+    applyWall(settings.wallpaper);
+    renderScenes(); tick();
+    if (weatherChanged) { wxState.data = null; wxState.aq = null; wxState.fxKey = ''; loadWeather(true); }
+    else { wxState.fxKey = ''; renderWeather(); }
+  });
+
+  /* ---------- start ---------- */
+  renderTimers();
+  renderTodos();
+  renderScenes();
+  tick();
+  setInterval(tick, 1000);
+  loadWeather();
+  if (!settings.place) setTimeout(openSettings, 400);
+})();
+</script>
+</body>
+</html>
