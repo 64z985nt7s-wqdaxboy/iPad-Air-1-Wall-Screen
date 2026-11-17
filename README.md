@@ -1,4 +1,3 @@
-# iPad-Air-1-Wall-Screen
 # Home Display
 
 **Turn an old iPad into an iOS-style smart home display.** It shows a big clock, the weather, kitchen timers, reminders and one-tap Home scenes. It's a single web page, so there's nothing to install from the App Store, and it's built to run on iPads as old as the **iPad Air 1 (iOS 12)**.
@@ -10,7 +9,11 @@
 ## Features
 
 - 🕙 **Lock-screen clock:** a big bold time and date, like the iOS lock screen.
-- ⛅ **Weather:** current conditions, the next 6 hours and a 6-day forecast with temperature bars, in iOS Weather style. The card's colour changes with the sky and with day or night.
+- ⛅ **Live weather tile:** current conditions, the next 6 hours and a 6-day forecast with temperature bars, in iOS Weather style. It refreshes every 5 minutes, and whenever the screen wakes. Tap it to refresh straight away.
+  - **Rain soon:** "Rain starting in about 30 min" from the short-term forecast.
+  - **Air quality, UV, wind and humidity** at a glance.
+  - **Warnings** for thunderstorms, heavy rain, strong winds, extreme heat and very poor air. These are worked out from the forecast, not official alerts.
+  - **Animated sky:** rain, snow, drifting clouds, stars or sun glow behind the card. It can be turned off in Settings.
 - ⏱ **Timers:** one-tap presets from 1 minute to 1 hour. You can pause, resume or cancel them, and an iOS-style alert chimes when one is done (with Repeat and Stop buttons).
 - ✅ **Reminders:** a simple to-do list that stays saved on the iPad.
 - 🏠 **Scenes:** Home app–style tiles that run your shortcuts, for example to switch HomeKit lights and devices on or off.
@@ -102,6 +105,7 @@ GitHub Pages updates within a minute or two. On the iPad, close the dashboard fr
 |---|---|
 | Location | The city used for weather. Search by name, or use the iPad's location. |
 | Temperature | °C or °F |
+| Animated Weather | Turns the moving sky behind the weather card on or off. |
 | 24-Hour Time | Switches the clock format. |
 | StandBy After | How long the screen sits untouched before the big StandBy clock appears (Off, 2, 5 or 15 minutes). Tapping the clock also opens it. |
 | Dim at Night / From / To | Dims the screen and turns StandBy red during these hours. |
@@ -112,8 +116,8 @@ GitHub Pages updates within a minute or two. On the iPad, close the dashboard fr
 
 ## Troubleshooting
 
-**The weather says "Unavailable".**
-Check the Wi-Fi. It retries on its own every few minutes and shows the last forecast it got in the meantime.
+**The weather says "Unavailable", or shows ⚠︎ next to "Updated".**
+Check the Wi-Fi. It retries on its own and shows the last forecast it got in the meantime. You can tap the weather card to try again.
 
 **"Use Current Location" doesn't work.**
 Location only works on an `https://` link, which GitHub Pages provides. Check that **Settings → Privacy → Location Services → Safari Websites** is turned on, or just search for your city instead.
@@ -137,7 +141,7 @@ Your settings and lists are stored in the browser. Clearing Safari's website dat
 - It's a single file (`index.html`) of plain HTML, CSS and JavaScript, with no frameworks and no build step.
 - It's written for **Safari 12** and avoids newer JavaScript and CSS features, so it also runs on old iPads.
 - The see-through "glass" panels are translucent colours rather than live blur, which keeps it smooth on older hardware.
-- Weather and city search use the free [Open-Meteo](https://open-meteo.com/) APIs. Nothing else is sent anywhere, and there's no tracking.
+- Weather, air quality and city search use the free [Open-Meteo](https://open-meteo.com/) APIs. Air quality is shown on the US AQI scale. Nothing else is sent anywhere, and there's no tracking.
 
 ## Credits
 
