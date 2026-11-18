@@ -141,6 +141,34 @@ The map is centred on your weather location. For your exact spot, use **Use Curr
 
 ---
 
+## Security & privacy
+
+**Built in:**
+- **Your data stays on the iPad.** Reminders, notes, places, stations and settings are saved in the iPad's browser. The GitHub repository only holds the code, so anyone else who opens your link sees an empty dashboard.
+- **Synced data isn't sent to GitHub.** It travels after the `#` in the link, and browsers never send that part to the server.
+- **Lock rules:** a Content Security Policy only lets the page connect to the services it uses: Open-Meteo, OpenStreetMap map tiles, the Radio Browser station directory and the radio streams you add. Other services are only sent your site's address, not the full page link.
+- **Safe text:** everything typed or synced is shown as plain text, so it can't run code.
+
+**Options in ••• → Passcode & Privacy:**
+| Option | What it does |
+|---|---|
+| Passcode | A 4-digit code to open Settings, with an iOS-style keypad. After 5 wrong tries it locks for a while. "Forgot?" removes the code **and** erases synced notes and reminders. |
+| Require for Notes | Asks for the passcode before showing synced notes. |
+| 🔒 on a scene | Tap the lock next to a scene in **••• → Scenes** to require the passcode before it runs. |
+| Hide Note Contents | Notes show as "Tap to show" and hide again after a minute. |
+| Approximate Location | Rounds your location to about 1 km before it's sent to the weather and map services. On by default. |
+| Keep Synced Items | Erases synced reminders and notes after 1, 7 or 30 days, or never. 7 days by default. |
+
+> The passcode keeps visitors and children out. It's checked on the iPad itself, so it isn't bank-level security.
+
+**Recommended:**
+- **Use a separate Apple ID on the dashboard iPad,** so your photos, messages and iCloud data aren't on it. Invite that Apple ID into your Home from the Home app on your phone, and turn off **Allow Editing** and **Remote Access** for it. Alternatively, hide apps with **Screen Time → Content & Privacy Restrictions**.
+- **Don't add scenes that unlock doors, open the garage or turn off alarms,** or protect them with 🔒.
+- **Don't sync passwords, PINs or bank details.** Synced text passes through the sync link and may be saved in Safari's history.
+- **Turn on two-factor authentication on your GitHub account,** so nobody else can change the page your iPad loads.
+
+---
+
 ## Updating your copy
 
 - **If you forked:** on your fork's main page, click **Sync fork → Update branch** to get the latest version.
@@ -164,6 +192,7 @@ GitHub Pages updates within a minute or two. On the iPad, close the dashboard fr
 | Reminders & Notes | Turn syncing on, set the shortcut's name, sync now, see the setup guide, or clear synced items. |
 | Maps | Apple Maps or Google Maps, travel mode, and your places. |
 | Music | Find and remove radio stations, add a stream link, and turn on the Music app buttons. |
+| Passcode & Privacy | Passcode, notes protection, hiding notes, approximate location, and how long synced items are kept. |
 | Wallpaper | Dusk, Ocean, Meadow, Rose or Graphite. |
 
 ---
