@@ -1,10 +1,14 @@
 # Home Display
 
-**Turn an old iPad into an iOS-style smart home display.** It shows a big clock, live weather, kitchen timers, reminders, notes, a map and a radio player, plus one-tap Home scenes, spread over two pages you swipe between. It's a single web page, so there's nothing to install from the App Store, and it's built to run on iPads as old as the **iPad Air 1 (iOS 12)**.
+**Turn an old iPad into an iOS-style smart home display.** It shows a big clock, live weather, kitchen timers, reminders, notes, a map and a radio player, plus kitchen and household helpers and a daily "home advisor", spread over four pages you swipe between. It's a single web page, so there's nothing to install from the App Store, and it's built to run on iPads as old as the **iPad Air 1 (iOS 12)**.
 
 ![Home Display, page 1](preview-landscape.png)
 
 ![Home Display, page 2](preview-page2.png)
+
+![Kitchen & Home page](preview-page3.png)
+
+![Home Advisor page](preview-page4.png)
 
 ---
 
@@ -21,7 +25,14 @@
 - 🗒 **Notes:** shows the notes you choose from Apple's **Notes** app, one at a time. Tap a note to read all of it.
 - 🗺 **Maps:** a live map around your location with your saved places. Tap a place for directions in **Apple Maps** or **Google Maps**, or search from the tile.
 - 🎵 **Music:** an internet radio player with an **AirPlay button** to choose the speaker (HomePod, Apple TV, Bluetooth or the iPad). It can also show ⏮ ⏯ ⏭ buttons for the Music app.
-- 📱 **Two pages:** swipe left and right like the iPad Home Screen. Page 1 has the clock, weather, timers, reminders and scenes. Page 2 has Maps, Music and Notes.
+- 🍳 **Kitchen & Home page:** shopping list, pressure cooker whistle counter, monthly tally for deliveries (milk, newspaper, household help), expiry dates, and waste collection days with reminders.
+- 💡 **Home Advisor page:** daily advice from the forecast (laundry, airing the house, AC, geyser, walks, UV, plants), a 24-hour air-quality chart, currency rates, and moon phase and daylight.
+- ⏱ **Named timers:** "Custom…" lets you name a timer (Rice, Washing machine…) and pick any length.
+- 📱 **Four pages:** swipe left and right like the iPad Home Screen, or tap the dots at the bottom.
+  1. Clock, weather, timers, reminders and scenes
+  2. Maps, Music and Notes
+  3. Kitchen & Home
+  4. Home Advisor
 - 🏠 **Scenes:** Home app–style tiles that run your shortcuts, for example to switch HomeKit lights and devices on or off.
 - 🌙 **StandBy screensaver:** a giant clock appears after a few idle minutes and turns red at night.
 - 🔅 **Night mode:** dims the screen during the hours you choose.
@@ -96,6 +107,36 @@ Tile icons are chosen from the name, so words like *morning*, *night*, *movie*, 
 
 ---
 
+## Kitchen & Home
+
+- **Shopping list:** tap the quick buttons (+ Milk, + Bread…) or type an item. Tap an item to tick it off, and tap **Clear** to remove ticked items.
+- **Pressure cooker:** set how many whistles to wait for, then tap **Listen**. The iPad counts whistles through its microphone and sounds an alarm when it's time to turn off the gas. This is experimental and needs the dashboard open in Safari, because iOS 12 doesn't allow the microphone in Home Screen web apps. You can always tap **+1 Whistle** yourself. If it misses whistles or counts other noises, change **Whistle Sensitivity** in **••• → Kitchen & Home**.
+- **Monthly tally:** add services in **••• → Monthly Tally** with how many you usually get per day and the price (optional). Every day is counted as "usual" automatically, so you only change the days that were different, for example when milk wasn't delivered. **Details** shows the whole month and earlier months, with totals to pay.
+- **Expiry dates:** add food or medicines with a date. They're coloured by how soon they expire, and anything due today or tomorrow shows a reminder banner. Tap an item to remove it.
+- **Waste collection:** set the days for each type in **••• → Waste Collection**. A reminder banner appears at 8 PM the evening before, and on the morning itself.
+
+---
+
+## Home Advisor
+
+The advisor turns the forecast and air quality for your area into simple suggestions, refreshed every 10 minutes:
+- when to dry laundry outside, and when to bring it in before rain
+- the best hours to air out the house, or when to keep windows shut because of poor air
+- heat and cold warnings, and when to use the AC or fan
+- whether the morning will be cold enough for the geyser
+- the best time for a walk, based on temperature, air quality, UV and rain
+- UV warnings, and whether to water the plants
+- reminders from the Kitchen & Home page: expiring items, waste collection and the shopping list
+
+**Other tiles on this page:**
+- an **air-quality chart** for the next 24 hours, showing the cleanest and worst hours
+- **currency rates** in rupees, with daily change and a one-week trend. Choose which currencies in **••• → Currency**.
+- **moon phase** and daylight length
+
+The advice is general guidance worked out from forecasts, so use your own judgement too.
+
+---
+
 ## Apple Reminders & Notes (optional)
 
 A web page can't read Apple's apps directly, so a shortcut collects your reminders and notes and passes them to the dashboard. You build it once.
@@ -146,7 +187,7 @@ The map is centred on your weather location. For your exact spot, use **Use Curr
 **Built in:**
 - **Your data stays on the iPad.** Reminders, notes, places, stations and settings are saved in the iPad's browser. The GitHub repository only holds the code, so anyone else who opens your link sees an empty dashboard.
 - **Synced data isn't sent to GitHub.** It travels after the `#` in the link, and browsers never send that part to the server.
-- **Lock rules:** a Content Security Policy only lets the page connect to the services it uses: Open-Meteo, OpenStreetMap map tiles, the Radio Browser station directory and the radio streams you add. Other services are only sent your site's address, not the full page link.
+- **Lock rules:** a Content Security Policy only lets the page connect to the services it uses: Open-Meteo, OpenStreetMap map tiles, the Radio Browser station directory, Frankfurter currency rates and the radio streams you add. Other services are only sent your site's address, not the full page link.
 - **Safe text:** everything typed or synced is shown as plain text, so it can't run code.
 
 **Options in ••• → Passcode & Privacy:**
@@ -193,6 +234,10 @@ GitHub Pages updates within a minute or two. On the iPad, close the dashboard fr
 | Maps | Apple Maps or Google Maps, travel mode, and your places. |
 | Music | Find and remove radio stations, add a stream link, and turn on the Music app buttons. |
 | Passcode & Privacy | Passcode, notes protection, hiding notes, approximate location, and how long synced items are kept. |
+| Kitchen & Home | Whistle sensitivity for the pressure cooker counter. |
+| Monthly Tally | Services such as milk or newspaper, how many per day, and price. |
+| Waste Collection | Waste types and their collection days. |
+| Currency | Your currency and which ones to show. |
 | Wallpaper | Dusk, Ocean, Meadow, Rose or Graphite. |
 
 ---
@@ -236,6 +281,6 @@ Your settings and lists are stored in the browser. Clearing Safari's website dat
 
 Weather data by [Open-Meteo.com](https://open-meteo.com/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
-Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors. Radio station directory by [Radio Browser](https://www.radio-browser.info/).
+Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors. Radio station directory by [Radio Browser](https://www.radio-browser.info/). Currency rates from the European Central Bank via [Frankfurter](https://frankfurter.dev/).
 
 Inspired by Apple's iOS design. This project is not affiliated with or endorsed by Apple. iPad, iOS, HomeKit and Shortcuts are trademarks of Apple Inc.

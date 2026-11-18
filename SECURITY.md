@@ -47,7 +47,7 @@ Please give a reasonable amount of time to fix a problem before sharing details 
 
 ### Out of scope
 - **Physical access to an unlocked device.** The passcode is a convenience lock, checked on the device itself. It keeps casual visitors out and isn't meant to stop someone who has the device and technical tools.
-- Problems in outside services the page uses: Open-Meteo, OpenStreetMap, Radio Browser and third-party radio streams. Please report those to the services themselves.
+- Problems in outside services the page uses: Open-Meteo, OpenStreetMap, Radio Browser, Frankfurter and third-party radio streams. Please report those to the services themselves.
 - Problems in Apple's software (Safari, Shortcuts, iOS or HomeKit), GitHub or GitHub Pages. Please report those to Apple or GitHub.
 - What users' own shortcuts and scenes do once they run.
 - Missing security headers that GitHub Pages doesn't let site owners set.
@@ -62,6 +62,7 @@ Please give a reasonable amount of time to fix a problem before sharing details 
   - **Open-Meteo:** the location for weather and air quality, rounded to about 1 km by default.
   - **OpenStreetMap:** map image requests for the area around that location.
   - **Radio Browser:** station searches.
+  - **Frankfurter:** which currencies to show rates for.
   - **Radio stations:** the streams the user chooses to play.
 - **Content Security Policy:** the page may only connect to the services above, and outside services are only sent the site's address, not the full page link.
 - **Passcode:** a 4-digit code, stored only as a salted hash on the device, with increasing lockouts after repeated wrong tries.

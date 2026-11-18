@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Home">
 <meta name="format-detection" content="telephone=no">
 <!-- Security: only load from the services this page uses, and don't pass the page address on to them -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src https://api.open-meteo.com https://air-quality-api.open-meteo.com https://geocoding-api.open-meteo.com https://*.api.radio-browser.info; img-src 'self' data: https:; media-src https:; font-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src https://api.open-meteo.com https://air-quality-api.open-meteo.com https://geocoding-api.open-meteo.com https://*.api.radio-browser.info https://api.frankfurter.dev; img-src 'self' data: https:; media-src https:; font-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'">
 <meta name="referrer" content="strict-origin">
 <title>Home Display</title>
 <!--
@@ -250,9 +250,8 @@ svg{display:block}
 .al-btns button:active{background:rgba(255,255,255,.08)}
 
 /* ---------- pages (swipe like the Home Screen) ---------- */
-.pages{display:flex;width:200%;height:100%;transition:transform .45s cubic-bezier(.2,.9,.3,1)}
-.pages.on2{transform:translateX(-50%)}
-.pages>.dash{width:50%;flex:none}
+.pages{display:flex;width:400%;height:100%;transition:transform .45s cubic-bezier(.2,.9,.3,1)}
+.pages>.dash{width:25%;flex:none}
 .dots{position:fixed;left:0;right:0;bottom:8px;text-align:center;z-index:5;font-size:0;pointer-events:none}
 .dots button{width:8px;height:8px;border-radius:4px;border:0;background:rgba(255,255,255,.35);margin:0 5px;padding:0;pointer-events:auto}
 .dots button.on{background:#fff}
@@ -381,11 +380,132 @@ svg{display:block}
 .lockb{border:0;background:none;font-size:18px;width:36px;height:36px;margin-left:6px;opacity:.35;flex:none}
 .lockb.on{opacity:1}
 
+/* ---------- pages 3 & 4 ---------- */
+.dash.p3{grid-template-columns:1.1fr 1fr 1fr;grid-template-rows:auto 1fr 1fr;grid-template-areas:"mini mini mini" "shop whistle waste" "shop tally expiry"}
+.dash.p4{grid-template-columns:1.15fr 1fr 1fr;grid-template-rows:auto 1.1fr 1fr;grid-template-areas:"mini mini mini" "adv aqi aqi" "adv fx moon"}
+.mini{grid-area:mini;display:flex;align-items:center;padding:0 4px}
+.mini-title{font-size:17px;font-weight:700;margin-left:14px;padding:4px 10px;border-radius:10px;background:rgba(255,255,255,.16)}
+#shopW{grid-area:shop}#whistleW{grid-area:whistle}#wasteW{grid-area:waste}#tallyW{grid-area:tally}#expW{grid-area:expiry}
+#advW{grid-area:adv}#aqiW{grid-area:aqi}#fxW{grid-area:fx}#moonW{grid-area:moon}
+.nav .navl{position:absolute;left:18px;top:0;bottom:0;border:0;background:none;color:var(--blue);font-size:17px}
+
+/* simple checklists */
+.clist{list-style:none;margin:0;padding:0}
+.clist li{display:flex;align-items:flex-start;padding:9px 0 0}
+.clist li.done .rc{border-color:var(--green)}
+.clist li.done .rc:after{content:'';position:absolute;top:3px;left:3px;width:13px;height:13px;border-radius:7px;background:var(--green)}
+.clist li.done .rt{color:var(--label3);text-decoration:line-through}
+.chipsx{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;flex:none;margin:0 -2px 4px;padding-bottom:2px}
+.chipsx .chip{flex:none;margin:0 4px 0 2px;height:30px;line-height:30px;font-size:13px;padding:0 11px}
+
+/* pressure cooker */
+.wc{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.wc-n{font-size:64px;font-weight:300;line-height:1;font-variant-numeric:tabular-nums}
+.wc-of{font-size:14px;color:var(--label2);margin-top:2px}
+.wc-step{display:flex;align-items:center;margin-top:10px;font-size:14px;color:var(--label2)}
+.wc-step button{width:30px;height:30px;border-radius:15px;border:0;background:var(--fill);color:#fff;font-size:18px;margin:0 8px}
+.wc-step b{color:#fff;font-size:17px;min-width:16px}
+.wc-btns{display:flex;width:100%;margin-top:12px;flex:none}
+.wc-btns .pill{flex:1;margin:0 4px;height:44px;border-radius:22px}
+.pill.on{background:var(--red)}
+.wmeter{height:4px;border-radius:2px;background:var(--fill);overflow:hidden;width:100%;margin-top:10px;flex:none}
+.wmeter i{display:block;height:100%;width:0;background:var(--orange);transition:width .1s}
+.flashok{animation:okflash .6s}
+@keyframes okflash{0%{background:rgba(255,159,10,.55)}100%{background:var(--widget)}}
+
+/* expiry */
+.erow{display:flex;align-items:center;padding:9px 0;border-top:.5px solid var(--sep);font-size:16px}
+.erow:first-child{border-top:0}
+.edot{width:9px;height:9px;border-radius:5px;margin-right:10px;flex:none}
+.ename{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ewhen{font-size:13px;font-weight:600;margin-left:8px;white-space:nowrap}
+.eform{display:flex;align-items:center;padding-top:8px;flex:none}
+.input2{flex:1;min-width:0;background:var(--fill);border:0;border-radius:10px;color:#fff;font-size:15px;padding:8px 10px;font-family:inherit;-webkit-appearance:none;outline:none;height:36px;box-sizing:border-box}
+.input2.d{flex:none;width:118px;margin-left:6px;font-size:14px}
+.btn-sm{border:0;border-radius:10px;background:var(--blue);color:#fff;font-size:15px;font-weight:600;height:36px;padding:0 12px;margin-left:6px}
+
+/* monthly tally */
+.trow2{display:flex;align-items:center;padding:8px 0;border-top:.5px solid var(--sep)}
+.trow2:first-child{border-top:0}
+.tname{flex:1;min-width:0;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tname small{display:block;font-size:12px;font-weight:400;color:var(--label2)}
+.tctl{display:flex;align-items:center}
+.tctl button{width:32px;height:32px;border-radius:16px;border:0;background:var(--fill);color:#fff;font-size:19px;line-height:1}
+.tctl b{min-width:30px;text-align:center;font-size:18px;font-variant-numeric:tabular-nums}
+.tfoot{display:flex;align-items:center;justify-content:space-between;padding-top:6px;flex:none;font-size:13px;color:var(--label2)}
+.linkbtn2{border:0;background:none;color:var(--blue);font-size:15px}
+.tsvc{margin-top:18px}
+.tsvc h4{margin:0 0 8px;font-size:17px}
+.tsvc h4 small{font-weight:400;color:var(--label2);font-size:14px;margin-left:6px}
+.tgrid{display:grid;grid-template-columns:repeat(7,1fr);grid-gap:6px}
+.tcell{height:46px;border-radius:9px;border:0;background:#2c2c2e;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.tcell small{font-size:10px;color:var(--label2)}
+.tcell b{font-size:17px}
+.tcell.zero b{color:var(--red)}
+.tcell.edit{background:#3a3a3c}
+.tcell.off{opacity:.3}
+.mnav{display:flex;align-items:center;justify-content:center;margin-top:14px}
+.mnav b{font-size:17px;min-width:170px;text-align:center}
+.mnav button{border:0;background:var(--fill);color:#fff;width:34px;height:34px;border-radius:17px;font-size:20px}
+
+/* waste */
+.wtoday{flex:none}
+.wlabel{font-size:12px;font-weight:600;text-transform:uppercase;color:var(--label2);margin-top:6px}
+.wtype{display:flex;align-items:center;font-size:17px;font-weight:600;margin-top:6px}
+.wtype i{width:10px;height:10px;border-radius:5px;margin-right:9px;flex:none}
+.wnone{font-size:15px;color:var(--label2);margin-top:6px}
+.wweek{display:flex;margin-top:auto;padding-top:10px;flex:none}
+.wday{flex:1;text-align:center;font-size:12px;color:var(--label2)}
+.wday.today{color:#fff;font-weight:700}
+.wday span{display:block;height:8px;margin-top:5px}
+.wday span i{display:inline-block;width:6px;height:6px;border-radius:3px;margin:0 1px}
+.daybtns{display:flex;margin-left:8px}
+.daybtns button{width:26px;height:26px;border-radius:13px;border:0;background:var(--fill);color:var(--label2);font-size:12px;font-weight:600;margin-left:3px;padding:0}
+.daybtns button.on{background:var(--green);color:#000}
+
+/* nudge banner */
+.nudge{position:fixed;top:10px;left:50%;width:460px;max-width:90%;transform:translate(-50%,-140%);transition:transform .45s cubic-bezier(.2,.9,.3,1);z-index:15;
+  background:rgba(36,36,40,.96);border-radius:16px;padding:12px 14px;display:flex;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.nudge.show{transform:translate(-50%,0)}
+.nudge .ni{font-size:26px;margin-right:12px}
+.nudge .nt{flex:1;min-width:0}
+.nudge .nt b{display:block;font-size:15px}
+.nudge .nt span{font-size:14px;color:var(--label2)}
+.nudge button{border:0;background:var(--fill);color:#fff;width:28px;height:28px;border-radius:14px;margin-left:10px;flex:none}
+
+/* advisor */
+.acard{display:flex;align-items:flex-start;padding:10px 0;border-top:.5px solid var(--sep)}
+.acard:first-child{border-top:0;padding-top:2px}
+.acard .ai{font-size:26px;width:40px;flex:none;line-height:1.1}
+.acard b{display:block;font-size:16px;line-height:1.3}
+.acard span{display:block;font-size:14px;color:var(--label2);line-height:1.35;margin-top:2px}
+.aqbars{flex:1;min-height:60px;width:100%}
+.aqlabels{display:flex;justify-content:space-between;font-size:11px;color:var(--label2);padding-top:4px;flex:none}
+.aqfoot{display:flex;justify-content:space-between;font-size:13px;padding-top:8px;flex:none}
+.aqpill{display:inline-flex;align-items:center;font-size:13px;font-weight:600;padding:3px 9px;border-radius:11px;background:var(--fill)}
+.aqpill i{width:8px;height:8px;border-radius:4px;margin-right:6px}
+.fxrow{display:flex;align-items:center;padding:7px 0;border-top:.5px solid var(--sep)}
+.fxrow:first-child{border-top:0}
+.fxcode{width:48px;font-size:15px;font-weight:700}
+.fxval{flex:1;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.fxchg{font-size:12px;font-weight:600;width:58px;text-align:right}
+.fxspark{width:54px;height:20px;margin-left:8px;flex:none}
+.moonbox{display:flex;align-items:center;flex:none}
+.moonbox svg{flex:none}
+.moonmeta{margin-left:14px}
+.moonmeta b{display:block;font-size:17px}
+.moonmeta span{display:block;font-size:13px;color:var(--label2);margin-top:2px}
+.daylen{margin-top:16px;padding-top:8px;border-top:.5px solid var(--sep);font-size:14px;line-height:1.5;flex:none}
+.daylen span{color:var(--label2)}
+
 /* ---------- portrait ---------- */
 @media (orientation:portrait){
   .dash{grid-template-columns:1fr 1fr;grid-template-rows:auto auto 1fr auto;
     grid-template-areas:"clock clock" "wx wx" "timers rem" "scenes scenes"}
   .dash.p2{grid-template-columns:1fr 1fr;grid-template-rows:auto 1.2fr 1fr;grid-template-areas:"mini mini" "maps maps" "music notes"}
+  .dash.p3{grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr 1fr 1fr;grid-template-areas:"mini mini" "shop whistle" "shop waste" "tally expiry"}
+  .dash.p4{grid-template-columns:1fr 1fr;grid-template-rows:auto 1.5fr 1fr 1fr;grid-template-areas:"mini mini" "adv adv" "aqi aqi" "fx moon"}
+
 
   .c-time{font-size:112px}
   .wx-cols{flex-direction:row}
@@ -472,9 +592,9 @@ svg{display:block}
 
 <div class="dash p2" id="page2">
   <div id="miniW">
-    <span class="mini-time" id="miniTime"></span><span class="mini-date" id="miniDate"></span>
-    <span class="mini-wx" id="miniWx"></span>
-    <button class="more press" id="settingsBtn2" aria-label="Settings" style="margin-left:14px">
+    <span class="mini-time"></span><span class="mini-date"></span>
+    <span class="mini-wx"></span>
+    <button class="more press setbtn" aria-label="Settings" style="margin-left:14px">
       <svg width="20" height="6" viewBox="0 0 20 6"><circle cx="3" cy="3" r="2.4" fill="#fff"/><circle cx="10" cy="3" r="2.4" fill="#fff"/><circle cx="17" cy="3" r="2.4" fill="#fff"/></svg>
     </button>
   </div>
@@ -526,8 +646,87 @@ svg{display:block}
     <div class="nfoot"><span id="noteFoot"></span><span class="ndots"><button class="nnav hidden" id="notePrev" type="button">‹</button><span id="noteDots" style="display:flex"></span><button class="nnav hidden" id="noteNext" type="button">›</button></span></div>
   </section>
 </div>
+<div class="dash p3" id="page3">
+  <div class="mini">
+    <span class="mini-time"></span><span class="mini-title">Kitchen &amp; Home</span>
+    <span class="mini-wx"></span>
+    <button class="more press setbtn" aria-label="Settings" style="margin-left:14px">
+      <svg width="20" height="6" viewBox="0 0 20 6"><circle cx="3" cy="3" r="2.4" fill="#fff"/><circle cx="10" cy="3" r="2.4" fill="#fff"/><circle cx="17" cy="3" r="2.4" fill="#fff"/></svg>
+    </button>
+  </div>
+
+  <section class="w" id="shopW">
+    <div class="w-h"><span class="ic" style="background:var(--green)">🛒</span>Shopping<span class="right"><button class="clearbtn hidden" id="shopClear" type="button">Clear</button><span class="count" id="shopCount" style="color:var(--green)">0</span></span></div>
+    <div class="chipsx" id="shopQuick"></div>
+    <div class="scroll"><ul class="clist" id="shopList"></ul></div>
+    <form class="newrem" id="shopForm" autocomplete="off"><span class="plus" style="background:var(--green)"></span><input id="shopInput" placeholder="Add item" maxlength="60" style="color:#fff"></form>
+  </section>
+
+  <section class="w" id="whistleW">
+    <div class="w-h"><span class="ic" style="background:#ff6b35">♨︎</span>Pressure Cooker<span class="right"><button class="sbtn" id="whReset" type="button" aria-label="Reset">↺</button></span></div>
+    <div class="wc">
+      <div class="wc-n" id="whCount">0</div>
+      <div class="wc-of" id="whOf"></div>
+      <div class="wc-step">Stop after<button type="button" id="whMinus">−</button><b id="whTarget">3</b><button type="button" id="whPlus">+</button></div>
+    </div>
+    <div class="wmeter hidden" id="whMeterRow"><i id="whMeter"></i></div>
+    <div class="wc-btns"><button class="pill press" type="button" id="whListen">🎤 Listen</button><button class="pill press" type="button" id="whAdd">+1 Whistle</button></div>
+  </section>
+
+  <section class="w" id="wasteW">
+    <div class="w-h"><span class="ic" style="background:#2fb56a">♻︎</span>Waste Collection</div>
+    <div class="wtoday" id="wasteToday"></div>
+    <div class="wweek" id="wasteWeek"></div>
+  </section>
+
+  <section class="w" id="tallyW">
+    <div class="w-h"><span class="ic" style="background:#30b0c7">📋</span><span id="tallyTitle">This Month</span><span class="right"><span class="count" id="tallyTotal" style="color:#64d2ff;font-size:20px"></span></span></div>
+    <div class="scroll" id="tallyRows"></div>
+    <div class="tfoot"><span id="tallyFoot">Today's count. Change it if a delivery was missed.</span><button class="linkbtn2" id="tallyMore" type="button">Details</button></div>
+  </section>
+
+  <section class="w" id="expW">
+    <div class="w-h"><span class="ic" style="background:#bf5af2">⏳</span>Expiry Dates<span class="right"><span class="count" id="expCount" style="color:#ff9f0a;font-size:20px"></span></span></div>
+    <div class="scroll" id="expList"></div>
+    <form class="eform" id="expForm" autocomplete="off"><input class="input2" id="expName" placeholder="Item" maxlength="40"><input class="input2 d" id="expDate" type="date"><button class="btn-sm" type="submit">Add</button></form>
+  </section>
 </div>
-<div class="dots" id="dots"><button type="button" class="on" aria-label="Page 1"></button><button type="button" aria-label="Page 2"></button></div>
+
+<div class="dash p4" id="page4">
+  <div class="mini">
+    <span class="mini-time"></span><span class="mini-title">Home Advisor</span>
+    <span class="mini-wx"></span>
+    <button class="more press setbtn" aria-label="Settings" style="margin-left:14px">
+      <svg width="20" height="6" viewBox="0 0 20 6"><circle cx="3" cy="3" r="2.4" fill="#fff"/><circle cx="10" cy="3" r="2.4" fill="#fff"/><circle cx="17" cy="3" r="2.4" fill="#fff"/></svg>
+    </button>
+  </div>
+
+  <section class="w" id="advW">
+    <div class="w-h"><span class="ic" style="background:#5e5ce6">💡</span>Today's Advice</div>
+    <div class="scroll" id="advList"></div>
+    <div class="tfoot"><span id="advFoot">From the forecast for your area</span></div>
+  </section>
+
+  <section class="w" id="aqiW">
+    <div class="w-h"><span class="ic" style="background:#30d158">🫁</span>Air Quality · Next 24 Hours<span class="right"><span class="aqpill" id="aqiNow"></span></span></div>
+    <svg class="aqbars" id="aqiBars" viewBox="0 0 240 100" preserveAspectRatio="none"></svg>
+    <div class="aqlabels" id="aqiLabels"></div>
+    <div class="aqfoot"><span id="aqiBest"></span><span id="aqiWorst"></span></div>
+  </section>
+
+  <section class="w" id="fxW">
+    <div class="w-h"><span class="ic" style="background:#ffcc00;color:#000">₹</span>Currency<span class="right" style="font-size:12px;font-weight:400;color:var(--label2)" id="fxDate"></span></div>
+    <div class="scroll" id="fxList"></div>
+  </section>
+
+  <section class="w" id="moonW">
+    <div class="w-h"><span class="ic" style="background:#3a3a8c">🌙</span>Moon &amp; Daylight</div>
+    <div class="moonbox"><span id="moonPic"></span><div class="moonmeta" id="moonMeta"></div></div>
+    <div class="daylen" id="dayLen"></div>
+  </section>
+</div>
+</div>
+<div class="dots" id="dots"><button type="button" class="on" aria-label="Page 1"></button><button type="button" aria-label="Page 2"></button><button type="button" aria-label="Page 3"></button><button type="button" aria-label="Page 4"></button></div>
 
 <!-- StandBy -->
 <div class="standby hidden" id="standby">
@@ -624,6 +823,30 @@ svg{display:block}
       </div>
       <div class="gf">Adds ⏮ ⏯ ⏭ buttons that control the Music app. Make three shortcuts named "Music Previous", "Music Play Pause" and "Music Next", each with one action: Skip Back, Play/Pause or Skip Forward. The iPad switches to Shortcuts briefly on each tap. iOS 12 doesn't let anything change the Music app's speaker, so use Control Center for that. The AirPlay button at the top of the Music tile chooses the speaker for radio.</div>
 
+      <div class="gh">Kitchen &amp; Home</div>
+      <div class="group">
+        <div class="cell">Whistle Sensitivity
+          <div class="seg" data-key="whistleSens"><button data-v="low" type="button">Low</button><button data-v="med" type="button">Medium</button><button data-v="high" type="button">High</button></div></div>
+      </div>
+      <div class="gf">For the pressure cooker counter. Raise it if whistles are missed, and lower it if other sounds get counted.</div>
+
+      <div class="gh">Monthly Tally</div>
+      <div class="group" id="svcRows"></div>
+      <div class="group" style="margin-top:10px"><div class="cell link tap" id="addSvc"><span class="addc"></span>Add Service</div></div>
+      <div class="gf">For daily deliveries or visits, such as milk, the newspaper or household help. "Usual" is how many you get on a normal day, so you only need to change days that were different. Price is per unit (optional).</div>
+
+      <div class="gh">Waste Collection</div>
+      <div class="group" id="wasteRows"></div>
+      <div class="group" style="margin-top:10px"><div class="cell link tap" id="addWaste"><span class="addc"></span>Add Type</div></div>
+      <div class="gf">Tap the days each type is collected. You'll see a reminder at 8 PM the evening before, and on the morning itself.</div>
+
+      <div class="gh">Currency</div>
+      <div class="group">
+        <div class="cell">Your Currency<input class="ein rt-in" id="fxBase" placeholder="INR" maxlength="3" style="text-transform:uppercase"></div>
+        <div class="cell">Show<input class="ein rt-in" id="fxCodes" placeholder="USD, EUR, GBP, SGD" style="text-transform:uppercase"></div>
+      </div>
+      <div class="gf">Daily reference rates from the European Central Bank (about 30 currencies, including USD, EUR, GBP, SGD, AUD, CAD, JPY and CHF; not AED or SAR).</div>
+
       <div class="gh">Passcode &amp; Privacy</div>
       <div class="group">
         <div class="cell link tap" id="pinSet">Turn Passcode On</div>
@@ -705,12 +928,45 @@ svg{display:block}
 </div>
 
 
+<!-- new named timer -->
+<div class="modal hidden" id="timerSheet">
+  <div class="sheet" style="height:auto;max-height:88%">
+    <div class="nav"><button class="navl" id="tCancel" type="button">Cancel</button>New Timer<button class="done" id="tStart" type="button">Start</button></div>
+    <div class="sbody">
+      <div class="gh">Name</div>
+      <div class="group"><div class="cell"><input class="ein" id="tName" placeholder="e.g. Rice" maxlength="30"></div></div>
+      <div class="chipsx" id="tNames" style="margin-top:10px"></div>
+      <div class="gh">Time</div>
+      <div class="group">
+        <div class="cell tap">Hours<span class="val" id="tHVal">0</span><span class="chev">›</span><select id="tH"></select></div>
+        <div class="cell tap">Minutes<span class="val" id="tMVal">10</span><span class="chev">›</span><select id="tM"></select></div>
+      </div>
+      <div class="chipsx" id="tQuick" style="margin-top:10px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- monthly tally details -->
+<div class="modal hidden" id="tallySheet">
+  <div class="sheet">
+    <div class="nav">Monthly Tally<button class="done" id="tallyDone" type="button">Done</button></div>
+    <div class="sbody">
+      <div class="mnav"><button type="button" id="tmPrev">‹</button><b id="tmLabel"></b><button type="button" id="tmNext">›</button></div>
+      <div id="tallyBody"></div>
+      <div class="gf" style="margin-top:18px">Tap a day to change its count. Red means nothing was delivered that day.</div>
+    </div>
+  </div>
+</div>
+
+<!-- reminder banner -->
+<div class="nudge" id="nudge"><span class="ni" id="nudgeIcon"></span><span class="nt"><b id="nudgeTitle"></b><span id="nudgeBody"></span></span><button type="button" id="nudgeX" aria-label="Dismiss">✕</button></div>
+
 <!-- Timer alert -->
 <div class="alertbg hidden" id="alarm">
   <div class="alert">
     <div class="al-body">
       <div class="al-ic">⏰</div>
-      <div class="al-title">Timer</div>
+      <div class="al-title" id="alTitle">Timer</div>
       <div class="al-msg" id="alarmText">Your timer is done.</div>
     </div>
     <div class="al-btns"><button id="alarmRepeat" type="button">Repeat</button><button id="alarmStop" type="button">Stop</button></div>
@@ -767,7 +1023,9 @@ svg{display:block}
   var DEFAULTS = {
     place: null, units: 'c', clock24: false, fxOn: true, syncOn: false, syncName: 'Dashboard Sync',
     mapsApp: 'apple', travel: 'd', places: [], mappOn: false,
-    pinNotes: false, privNotes: false, approxLoc: true, keepDays: 7, idleMin: 5, nightOn: true, nightStart: 22, nightEnd: 6, wallpaper: 'dusk',
+    pinNotes: false, privNotes: false, approxLoc: true, keepDays: 7, whistleSens: 'med', fxBase: 'INR', fxCodes: 'USD, EUR, GBP, SGD',
+    services: [{ id: 'milk', name: 'Milk', usual: 1, price: 0 }, { id: 'paper', name: 'Newspaper', usual: 1, price: 0 }],
+    waste: [{ name: 'Wet waste', days: [0, 1, 2, 3, 4, 5, 6] }, { name: 'Dry waste', days: [2, 5] }], idleMin: 5, nightOn: true, nightStart: 22, nightEnd: 6, wallpaper: 'dusk',
     scenes: [
       { label: 'Good Morning', shortcut: 'Good Morning' },
       { label: 'Lights Off', shortcut: 'Lights Off' },
@@ -821,13 +1079,15 @@ svg{display:block}
     }
 
     var now = Date.now();
-    var busy = isShown($('settings')) || isShown($('alarm')) || isShown($('noteSheet')) || isShown($('helpSheet')) || isShown($('dialog')) || isShown($('pinPad')) || radioState === 'playing';
+    var busy = isShown($('settings')) || isShown($('alarm')) || isShown($('noteSheet')) || isShown($('helpSheet')) || isShown($('dialog')) || isShown($('pinPad')) || isShown($('timerSheet')) || isShown($('tallySheet')) || (kitchenReady && wh.on) || radioState === 'playing';
     if (!standbyOpen && !busy && settings.idleMin > 0 && now - lastTouch > settings.idleMin * 60000) showStandby();
     $('dim').classList.toggle('on', night && !standbyOpen && now - lastTouch > 60000 && !isShown($('alarm')));
 
     // page 2 header, map day/night, notes slideshow
-    setText($('miniTime'), fmtFull(d.getHours(), d.getMinutes()));
-    setText($('miniDate'), DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()]);
+    var mt = document.querySelectorAll('.mini-time'), md = document.querySelectorAll('.mini-date'), k2;
+    for (k2 = 0; k2 < mt.length; k2++) setText(mt[k2], fmtFull(d.getHours(), d.getMinutes()));
+    for (k2 = 0; k2 < md.length; k2++) setText(md[k2], DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()]);
+    if (kitchenReady) kitchenTick(d);
     $('mapview').classList.toggle('dark', wxState.data ? !wxState.data.current.is_day : (d.getHours() < 6 || d.getHours() >= 19));
     if (page === 1 && noteList().length > 1 && now - noteShown > 25000 && !isShown($('noteSheet'))) stepNote(1);
     if (d.getSeconds() === 0) expireSync();
@@ -1059,7 +1319,8 @@ svg{display:block}
     setText($('wxDesc'), w.desc);
     setText($('wxHL'), 'H:' + Math.round(dl.temperature_2m_max[0]) + '°  L:' + Math.round(dl.temperature_2m_min[0]) + '°');
     setText($('wxSub'), 'Feels like ' + Math.round(c.apparent_temperature) + '°');
-    setText($('miniWx'), w.icon + ' ' + Math.round(c.temperature_2m) + '°  ' + w.desc);
+    var mw = document.querySelectorAll('.mini-wx');
+    for (var q = 0; q < mw.length; q++) setText(mw[q], w.icon + ' ' + Math.round(c.temperature_2m) + '°  ' + w.desc);
     renderPills(d, wxState.aq);
 
     // one live line: a warning if there is one, otherwise the rain outlook
@@ -1113,6 +1374,7 @@ svg{display:block}
     var kind = fxKind(c.weather_code, c.is_day) + (settings.fxOn === false ? '-off' : '');
     if (kind !== wxState.fxKey) { wxState.fxKey = kind; buildSky(fxKind(c.weather_code, c.is_day), c.is_day); }
     updateAgo();
+    if (kitchenReady) { renderAdvisor(); renderAqi(); renderMoon(); }
   }
 
   function getJSON(url) {
@@ -1138,14 +1400,14 @@ svg{display:block}
     var full = base +
       '&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day,wind_speed_10m,precipitation' +
       '&minutely_15=precipitation&forecast_minutely_15=12' +
-      '&hourly=temperature_2m,weather_code,is_day,precipitation_probability,precipitation,wind_gusts_10m' +
-      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max';
+      '&hourly=temperature_2m,weather_code,is_day,precipitation_probability,precipitation,wind_gusts_10m,relative_humidity_2m,uv_index,wind_speed_10m' +
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max,precipitation_sum';
     var basic = base +   // fallback if the richer request is ever refused
       '&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day' +
       '&hourly=temperature_2m,weather_code,is_day' +
       '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset';
     var aqUrl = 'https://air-quality-api.open-meteo.com/v1/air-quality?latitude=' + p.lat + '&longitude=' + p.lon +
-      '&current=us_aqi,pm2_5&timezone=auto';
+      '&current=us_aqi,pm2_5&hourly=us_aqi&forecast_days=2&timezone=auto';
     var wP = getJSON(full).catch(function () { return getJSON(basic); });
     var aP = getJSON(aqUrl).catch(function () { return null; });
     Promise.all([wP, aP]).then(function (r) {
@@ -1217,7 +1479,7 @@ svg{display:block}
   var ICON_PLAY = '<svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 1.3v11.4c0 .6.6.9 1.1.6l8.6-5.7c.4-.3.4-.9 0-1.2L4.1.7C3.6.4 3 .7 3 1.3z" fill="currentColor"/></svg>';
   var ICON_X = '<svg width="12" height="12" viewBox="0 0 12 12"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
   var RING_C = 2 * Math.PI * 19;
-  var PRESETS = [1, 3, 5, 10, 15, 20, 30, 60];
+  var PRESETS = [1, 5, 10, 15, 20, 30, 60];
   var timers = store.get('timers', []);
   var timerEls = {}, lastDone = [];
   function saveTimers() { store.set('timers', timers); }
@@ -1237,6 +1499,13 @@ svg{display:block}
     b.addEventListener('click', function () { addTimer(min, b.textContent); saveTimers(); renderTimers(); });
     $('presets').appendChild(b);
   });
+  (function () {
+    var b = document.createElement('button');
+    b.className = 'pill press'; b.type = 'button'; b.textContent = 'Custom…';
+    b.style.background = 'rgba(255,159,10,.28)'; b.style.color = 'var(--orange)';
+    b.addEventListener('click', function () { openTimerSheet(); });
+    $('presets').appendChild(b);
+  })();
   timers.forEach(function (t) { if (!t.paused && Date.now() - t.end > 10 * 60000) t.fired = true; });
 
   function renderTimers() {
@@ -1285,7 +1554,15 @@ svg{display:block}
   }
 
   var alarmIv = null, alarmTo = null;
+  function ringCustom(title, msg) {
+    $('alTitle').textContent = title; $('alarmText').textContent = msg; $('alarmRepeat').classList.add('hidden');
+    hideStandby(); $('dim').classList.remove('on');
+    if (!isShown($('alarm'))) openM($('alarm'));
+    if (!alarmIv) { chime(); alarmIv = setInterval(chime, 1500); }
+    clearTimeout(alarmTo); alarmTo = setTimeout(stopSound, 3 * 60000);
+  }
   function startAlarm(done) {
+    $('alTitle').textContent = 'Timer'; $('alarmRepeat').classList.remove('hidden');
     lastDone = lastDone.concat(done.map(function (t) { return { label: t.label, min: t.dur / 60000 }; }));
     $('alarmText').textContent = lastDone.length === 1 ? 'Your ' + lastDone[0].label + ' timer is done.' :
       lastDone.length + ' timers are done.';
@@ -1517,17 +1794,19 @@ svg{display:block}
   $('remSync').innerHTML = ICON_SYNC; $('noteSync').innerHTML = ICON_SYNC;
 
   /* ---------- pages: drag left and right like the Home Screen ---------- */
-  var page = 0, drag = null;
+  window.addEventListener('scroll', function () { if (window.scrollX || window.scrollY) window.scrollTo(0, 0); });
+  document.body.addEventListener('scroll', function () { document.body.scrollLeft = 0; });
+  var page = 0, drag = null, NPAGES = 4;
   function setPage(i) {
-    page = i;
+    page = Math.max(0, Math.min(NPAGES - 1, i));
     var pg = $('pages');
-    pg.style.transition = ''; pg.style.transform = '';
-    pg.classList.toggle('on2', i === 1);
+    pg.style.transition = '';
+    pg.style.transform = 'translateX(' + (-page * 100 / NPAGES) + '%)';
     var d = $('dots').children;
-    for (var k = 0; k < d.length; k++) d[k].classList.toggle('on', k === i);
-    document.documentElement.classList.toggle('pg1', i === 0);
-    document.documentElement.classList.toggle('pg2', i === 1);
-    if (i === 1) setTimeout(function () { renderMap(); }, 60);
+    for (var k = 0; k < d.length; k++) d[k].classList.toggle('on', k === page);
+    document.documentElement.classList.toggle('pg2', page !== 0);   // pause the weather sky off page 1
+    document.documentElement.classList.toggle('pg1', page !== 1);   // pause map/music animations off page 2
+    if (page === 1) setTimeout(function () { renderMap(); }, 60);
   }
   (function () {
     var d = $('dots').children;
@@ -1537,7 +1816,7 @@ svg{display:block}
     var t = e.target;
     drag = null;
     if (e.touches.length !== 1 || standbyOpen) return;
-    if (t.closest && t.closest('input,select,textarea,.mplaces,.modal,.alertbg,.mzoom,.scroll.tiles')) return;
+    if (t.closest && t.closest('input,select,textarea,.mplaces,.chipsx,.modal,.alertbg,.mzoom,.nudge')) return;
     drag = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now(), on: false, w: window.innerWidth };
   }, true);
   document.addEventListener('touchmove', function (e) {
@@ -1548,10 +1827,10 @@ svg{display:block}
       else if (Math.abs(dy) > 12) { drag = null; return; }
       else return;
     }
-    if ((page === 0 && dx > 0) || (page === 1 && dx < 0)) dx = dx / 3;   // rubber band at the ends
+    if ((page === 0 && dx > 0) || (page === NPAGES - 1 && dx < 0)) dx = dx / 3;   // rubber band at the ends
     var pg = $('pages');
     pg.style.transition = 'none';
-    pg.style.transform = 'translateX(' + (-page * drag.w + dx) / 2 + 'px)';
+    pg.style.transform = 'translateX(' + (-page * drag.w + dx) + 'px)';
     drag.dx = dx;
     e.preventDefault();
   }, { passive: false });
@@ -1559,8 +1838,8 @@ svg{display:block}
     if (!drag || !drag.on) { drag = null; return; }
     var dx = drag.dx || 0, fast = Date.now() - drag.t < 300 && Math.abs(dx) > 40;
     var next = page;
-    if ((dx < -drag.w / 4 || (fast && dx < 0)) && page === 0) next = 1;
-    if ((dx > drag.w / 4 || (fast && dx > 0)) && page === 1) next = 0;
+    if ((dx < -drag.w / 4 || (fast && dx < 0)) && page < NPAGES - 1) next = page + 1;
+    if ((dx > drag.w / 4 || (fast && dx > 0)) && page > 0) next = page - 1;
     drag = null;
     setPage(next);
   }, true);
@@ -1908,6 +2187,593 @@ svg{display:block}
     $('urlInput').value = '';
   });
 
+  /* ================= Kitchen & Home ================= */
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function dayDiff(s) { var a = parseDay(ymd(new Date())), b = parseDay(s); return Math.round((b - a) / 86400000); }
+  function hourText(h) { return settings.clock24 ? pad(h) + ':00' : (h % 12 || 12) + ' ' + (h < 12 ? 'AM' : 'PM'); }
+  function shortDate(s) { var d = parseDay(s); return d.getDate() + ' ' + MONTHS[d.getMonth()].slice(0, 3); }
+  function rupees(n) { var c = settings.fxBase && settings.fxBase !== 'INR' ? settings.fxBase + ' ' : '₹'; return c + Math.round(n).toLocaleString('en-IN'); }
+
+  /* ---------- named timers ---------- */
+  var T_NAMES = ['Rice', 'Dal', 'Tea', 'Milk', 'Eggs', 'Pasta', 'Oven', 'Washing machine', 'Geyser', 'Iron', 'Homework', 'Nap'];
+  var T_QUICK = [2, 5, 8, 12, 15, 20, 25, 30, 40, 45, 90];
+  (function () {
+    var h = '', m = '', i;
+    for (i = 0; i <= 5; i++) h += '<option value="' + i + '">' + i + '</option>';
+    for (i = 0; i <= 59; i++) m += '<option value="' + i + '">' + i + '</option>';
+    $('tH').innerHTML = h; $('tM').innerHTML = m;
+    T_NAMES.forEach(function (n) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'chip press'; b.textContent = n;
+      b.addEventListener('click', function () { $('tName').value = n; });
+      $('tNames').appendChild(b);
+    });
+    T_QUICK.forEach(function (q) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'chip press';
+      b.textContent = q >= 60 ? Math.floor(q / 60) + ' hr' + (q % 60 ? ' ' + q % 60 + ' min' : '') : q + ' min';
+      b.addEventListener('click', function () { $('tH').value = String(Math.floor(q / 60)); $('tM').value = String(q % 60); paintT(); });
+      $('tQuick').appendChild(b);
+    });
+  })();
+  function paintT() { $('tHVal').textContent = $('tH').value; $('tMVal').textContent = $('tM').value; }
+  $('tH').addEventListener('change', paintT); $('tM').addEventListener('change', paintT);
+  function openTimerSheet() { $('tName').value = ''; $('tH').value = '0'; $('tM').value = '10'; paintT(); openM($('timerSheet')); }
+  $('tCancel').addEventListener('click', function () { closeM($('timerSheet')); });
+  $('tStart').addEventListener('click', function () {
+    var min = (+$('tH').value) * 60 + (+$('tM').value);
+    if (!min) { showToast('Choose a time first'); return; }
+    var name = trim($('tName').value);
+    var dur = min >= 60 ? Math.floor(min / 60) + ' hr' + (min % 60 ? ' ' + min % 60 + ' min' : '') : min + ' min';
+    addTimer(min, name || dur); saveTimers(); renderTimers();
+    closeM($('timerSheet'));
+    showToast((name || 'Timer') + ' started · ' + dur);
+  });
+
+  /* ---------- shopping list ---------- */
+  var SHOP_QUICK = ['Milk', 'Bread', 'Eggs', 'Rice', 'Atta', 'Dal', 'Oil', 'Sugar', 'Tea', 'Coffee', 'Onions', 'Tomatoes', 'Potatoes',
+    'Vegetables', 'Fruits', 'Curd', 'Butter', 'Paneer', 'Soap', 'Detergent', 'Toothpaste', 'Biscuits'];
+  var shop = store.get('shop', []);
+  function saveShop() { store.set('shop', shop); }
+  function addShop(t) {
+    t = trim(t); if (!t) return;
+    for (var i = 0; i < shop.length; i++) if (shop[i].t.toLowerCase() === t.toLowerCase()) { shop[i].done = false; saveShop(); renderShop(); return; }
+    shop.push({ t: t, done: false }); saveShop(); renderShop();
+  }
+  function renderShop() {
+    var ul = $('shopList'), open = 0, anyDone = false;
+    ul.innerHTML = '';
+    var list = shop.filter(function (s) { return !s.done; }).concat(shop.filter(function (s) { return s.done; }));
+    list.forEach(function (s) {
+      if (s.done) anyDone = true; else open++;
+      var li = document.createElement('li');
+      if (s.done) li.className = 'done';
+      li.innerHTML = '<div class="rc"></div><div class="rt">' + esc(s.t) + '</div>';
+      li.addEventListener('click', function () { s.done = !s.done; saveShop(); renderShop(); });
+      ul.appendChild(li);
+    });
+    if (!shop.length) ul.innerHTML = '<li class="muted" style="padding-top:2px">List is empty. Tap an item above or type one below.</li>';
+    setText($('shopCount'), String(open));
+    $('shopClear').classList.toggle('hidden', !anyDone);
+  }
+  SHOP_QUICK.forEach(function (n) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'chip press'; b.textContent = '+ ' + n;
+    b.addEventListener('click', function () { addShop(n); });
+    $('shopQuick').appendChild(b);
+  });
+  $('shopForm').addEventListener('submit', function (e) { e.preventDefault(); addShop($('shopInput').value); $('shopInput').value = ''; $('shopInput').blur(); });
+  $('shopClear').addEventListener('click', function () { shop = shop.filter(function (s) { return !s.done; }); saveShop(); renderShop(); });
+
+  /* ---------- pressure cooker whistle counter ---------- */
+  var wh = { target: store.get('whTarget', 3), count: 0, on: false, stream: null, nodes: [], iv: null, hot: 0, cool: 0 };
+  function whRender() {
+    setText($('whCount'), String(wh.count));
+    setText($('whOf'), 'of ' + wh.target + ' whistle' + (wh.target === 1 ? '' : 's') + (wh.on ? ' · listening' : ''));
+    setText($('whTarget'), String(wh.target));
+    $('whListen').classList.toggle('on', wh.on);
+    $('whListen').textContent = wh.on ? '■ Stop Listening' : '🎤 Listen';
+    $('whMeterRow').classList.toggle('hidden', !wh.on);
+  }
+  function whAdd() {
+    wh.count++;
+    var w = $('whistleW'); w.classList.remove('flashok'); void w.offsetWidth; w.classList.add('flashok');
+    if (wh.count >= wh.target) {
+      whStop(); whRender();
+      ringCustom('Pressure Cooker', wh.target + ' whistle' + (wh.target === 1 ? '' : 's') + ' done. Time to turn off the gas.');
+      return;
+    }
+    if (actx) chime();
+    whRender();
+  }
+  function whStop() {
+    clearInterval(wh.iv); wh.iv = null; wh.on = false;
+    wh.nodes.forEach(function (n) { try { n.disconnect(); } catch (e) {} }); wh.nodes = [];
+    if (wh.stream) { wh.stream.getTracks().forEach(function (t) { t.stop(); }); wh.stream = null; }
+  }
+  function whStart() {
+    var md = navigator.mediaDevices;
+    if (!md || !md.getUserMedia) {
+      showDialog('Listening Isn\'t Available Here', 'The microphone only works when the dashboard is open in Safari, not from the Home Screen icon. You can still tap +1 for each whistle.');
+      return;
+    }
+    unlockAudio();
+    if (!actx) { showDialog('Sound Isn\'t Available', 'This browser can\'t analyse sound. Tap +1 for each whistle instead.'); return; }
+    md.getUserMedia({ audio: true }).then(function (stream) {
+      wh.stream = stream;
+      var src = actx.createMediaStreamSource(stream), an = actx.createAnalyser(), mute = actx.createGain();
+      an.fftSize = 2048; an.smoothingTimeConstant = 0.3; mute.gain.value = 0;
+      src.connect(an); an.connect(mute); mute.connect(actx.destination);   // Safari only analyses connected nodes
+      wh.nodes = [src, an, mute];
+      var buf = new Uint8Array(an.frequencyBinCount), binHz = actx.sampleRate / an.fftSize;
+      var lo = Math.floor(1800 / binHz), hi = Math.ceil(5200 / binHz), top = Math.ceil(9000 / binHz);
+      wh.on = true; wh.hot = 0; wh.cool = 0; whRender();
+      wh.iv = setInterval(function () {
+        an.getByteFrequencyData(buf);
+        var b = 0, t = 0, i;
+        for (i = lo; i < hi; i++) b += buf[i];
+        b /= (hi - lo);
+        for (i = 4; i < top; i++) t += buf[i];
+        t /= (top - 4);
+        var th = { low: 165, med: 140, high: 115 }[settings.whistleSens || 'med'];
+        $('whMeter').style.width = Math.min(100, b / th * 100).toFixed(0) + '%';
+        var loud = b > th && b > t * 1.3;
+        if (wh.cool > 0) { wh.cool--; if (loud) wh.cool = Math.max(wh.cool, 20); return; }  // wait for 2 s of quiet
+        if (loud) { if (++wh.hot >= 8) { wh.hot = 0; wh.cool = 30; whAdd(); } }               // ~0.8 s of steady whistle
+        else wh.hot = Math.max(0, wh.hot - 1);
+      }, 100);
+    }).catch(function () {
+      showDialog('Microphone Not Allowed', 'Allow the microphone for Safari in Settings → Safari → Camera & Microphone Access, then try again. You can still tap +1 for each whistle.');
+    });
+  }
+  $('whListen').addEventListener('click', function () { if (wh.on) { whStop(); whRender(); } else whStart(); });
+  $('whAdd').addEventListener('click', whAdd);
+  $('whReset').addEventListener('click', function () { wh.count = 0; whRender(); });
+  $('whMinus').addEventListener('click', function () { if (wh.target > 1) { wh.target--; store.set('whTarget', wh.target); whRender(); } });
+  $('whPlus').addEventListener('click', function () { if (wh.target < 15) { wh.target++; store.set('whTarget', wh.target); whRender(); } });
+
+  /* ---------- expiry dates ---------- */
+  var expiry = store.get('expiry', []);
+  function saveExp() { store.set('expiry', expiry); }
+  function expInfo(s) {
+    var d = dayDiff(s);
+    if (d < 0) return { txt: 'Expired', col: 'var(--red)' };
+    if (d === 0) return { txt: 'Today', col: 'var(--red)' };
+    if (d === 1) return { txt: 'Tomorrow', col: 'var(--orange)' };
+    if (d <= 7) return { txt: 'In ' + d + ' days', col: 'var(--yellow)' };
+    return { txt: shortDate(s), col: 'var(--green)' };
+  }
+  function renderExp() {
+    expiry.sort(function (a, b) { return a.d < b.d ? -1 : a.d > b.d ? 1 : 0; });
+    var box = $('expList'), soon = 0;
+    box.innerHTML = '';
+    expiry.forEach(function (it, i) {
+      var inf = expInfo(it.d);
+      if (dayDiff(it.d) <= 2) soon++;
+      var r = document.createElement('div');
+      r.className = 'erow';
+      r.innerHTML = '<span class="edot" style="background:' + inf.col + '"></span><span class="ename">' + esc(it.n) + '</span><span class="ewhen" style="color:' + inf.col + '">' + inf.txt + '</span>';
+      r.addEventListener('click', function () {
+        showConfirm('Remove ' + it.n + '?', 'Used up or thrown away? It will be taken off the list.', 'Remove', function () { expiry.splice(i, 1); saveExp(); renderExp(); });
+      });
+      box.appendChild(r);
+    });
+    if (!expiry.length) box.innerHTML = '<div class="muted">Add food or medicines with their expiry date to see what to use first.</div>';
+    setText($('expCount'), soon ? String(soon) : '');
+  }
+  $('expForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var n = trim($('expName').value), d = $('expDate').value;
+    if (!n || !/^\d{4}-\d{2}-\d{2}$/.test(d)) { showToast('Add a name and a date'); return; }
+    expiry.push({ n: n, d: d }); saveExp(); renderExp();
+    $('expName').value = ''; $('expDate').value = ''; $('expName').blur();
+  });
+
+  /* ---------- monthly tally (milk, newspaper, help...) ---------- */
+  var tally = store.get('tally', {});
+  function saveTally() { store.set('tally', tally); }
+  function ymKey(y, m) { return y + '-' + pad(m + 1); }
+  function svcCount(s, y, m, day) {
+    var k = ymKey(y, m), o = tally[k] && tally[k][s.id];
+    if (o && o[day] !== undefined) return o[day];
+    return ymd(new Date(y, m, day)) >= (s.start || '2000-01-01') ? (+s.usual || 0) : 0;
+  }
+  function setCount(s, y, m, day, n) {
+    var k = ymKey(y, m);
+    tally[k] = tally[k] || {}; tally[k][s.id] = tally[k][s.id] || {};
+    tally[k][s.id][day] = Math.max(0, n); saveTally();
+  }
+  function monthSum(s, y, m) {
+    var now = new Date(), last = new Date(y, m + 1, 0).getDate();
+    if (y === now.getFullYear() && m === now.getMonth()) last = now.getDate();
+    else if (new Date(y, m, 1) > now) last = 0;
+    var units = 0, zero = 0;
+    for (var d = 1; d <= last; d++) {
+      var c = svcCount(s, y, m, d); units += c;
+      if (!c && ymd(new Date(y, m, d)) >= (s.start || '')) zero++;
+    }
+    return { units: units, amount: units * (+s.price || 0), zero: zero };
+  }
+  function renderTally() {
+    var svcs = settings.services || [], now = new Date(), y = now.getFullYear(), m = now.getMonth(), d = now.getDate(), total = 0, box = $('tallyRows');
+    setText($('tallyTitle'), MONTHS[m]);
+    box.innerHTML = '';
+    if (!svcs.length) { box.innerHTML = '<div class="muted">Track daily deliveries like milk or the newspaper. Add them in ••• → Monthly Tally.</div>'; setText($('tallyTotal'), ''); return; }
+    svcs.forEach(function (s) {
+      var sum = monthSum(s, y, m), c = svcCount(s, y, m, d);
+      total += sum.amount;
+      var r = document.createElement('div'); r.className = 'trow2';
+      r.innerHTML = '<div class="tname">' + esc(s.name) + '<small>' + sum.units + ' this month' + (s.price ? ' · ' + rupees(sum.amount) : '') + '</small></div>' +
+        '<div class="tctl"><button type="button" aria-label="Less">−</button><b>' + c + '</b><button type="button" aria-label="More">+</button></div>';
+      var bt = r.querySelectorAll('button');
+      bt[0].addEventListener('click', function () { setCount(s, y, m, d, c - 1); renderTally(); });
+      bt[1].addEventListener('click', function () { setCount(s, y, m, d, c + 1); renderTally(); });
+      box.appendChild(r);
+    });
+    setText($('tallyTotal'), total ? rupees(total) : '');
+  }
+  var tm = null;
+  function renderTallySheet() {
+    var svcs = settings.services || [], y = tm.getFullYear(), m = tm.getMonth(), now = new Date(), html = '';
+    $('tmLabel').textContent = MONTHS[m] + ' ' + y;
+    var first = new Date(y, m, 1).getDay(), days = new Date(y, m + 1, 0).getDate(), grand = 0;
+    svcs.forEach(function (s, si) {
+      var sum = monthSum(s, y, m); grand += sum.amount;
+      html += '<div class="tsvc"><h4>' + esc(s.name) + '<small>' + sum.units + ' total' + (s.price ? ' · ' + rupees(sum.amount) : '') +
+        (sum.zero ? ' · ' + sum.zero + ' day' + (sum.zero === 1 ? '' : 's') + ' with none' : '') + '</small></h4><div class="tgrid">';
+      for (var b = 0; b < first; b++) html += '<span></span>';
+      for (var d = 1; d <= days; d++) {
+        var dt = new Date(y, m, d), future = dt > now, before = ymd(dt) < (s.start || '');
+        var c = svcCount(s, y, m, d), o = tally[ymKey(y, m)] && tally[ymKey(y, m)][s.id] && tally[ymKey(y, m)][s.id][d] !== undefined;
+        html += '<button type="button" class="tcell' + (future || before ? ' off' : '') + (!c && !future && !before ? ' zero' : '') + (o ? ' edit' : '') +
+          '" data-s="' + si + '" data-d="' + d + '"' + (future || before ? ' disabled' : '') + '><small>' + d + '</small><b>' + (future || before ? '·' : c) + '</b></button>';
+      }
+      html += '</div></div>';
+    });
+    if (grand) html += '<div class="gf" style="margin-top:16px;font-size:16px;color:#fff">Total for ' + MONTHS[m] + ': <b>' + rupees(grand) + '</b></div>';
+    $('tallyBody').innerHTML = html || '<div class="muted">No services yet. Add them in Settings → Monthly Tally.</div>';
+    var cells = $('tallyBody').querySelectorAll('.tcell');
+    for (var i = 0; i < cells.length; i++) cells[i].addEventListener('click', function () {
+      var s = svcs[+this.getAttribute('data-s')], d = +this.getAttribute('data-d'), c = svcCount(s, y, m, d);
+      var max = Math.max(3, (+s.usual || 0) + 2);
+      setCount(s, y, m, d, c >= max ? 0 : c + 1);
+      renderTallySheet(); renderTally();
+    });
+  }
+  $('tallyMore').addEventListener('click', function () { var n = new Date(); tm = new Date(n.getFullYear(), n.getMonth(), 1); renderTallySheet(); openM($('tallySheet')); });
+  $('tallyDone').addEventListener('click', function () { closeM($('tallySheet')); });
+  $('tmPrev').addEventListener('click', function () { tm = new Date(tm.getFullYear(), tm.getMonth() - 1, 1); renderTallySheet(); });
+  $('tmNext').addEventListener('click', function () {
+    var n = new Date(tm.getFullYear(), tm.getMonth() + 1, 1);
+    if (n <= new Date()) { tm = n; renderTallySheet(); }
+  });
+
+  /* ---------- waste collection ---------- */
+  var W_COLORS = ['#30d158', '#0a84ff', '#ff9f0a', '#bf5af2', '#ff453a', '#64d2ff'];
+  var DLETTER = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  function wasteOn(dayIdx) {
+    return (settings.waste || []).map(function (w, i) { return { w: w, col: W_COLORS[i % W_COLORS.length] }; })
+      .filter(function (x) { return x.w.days && x.w.days.indexOf(dayIdx) >= 0; });
+  }
+  function renderWaste() {
+    var now = new Date(), t = now.getDay(), tm2 = (t + 1) % 7, html = '';
+    function list(arr) {
+      if (!arr.length) return '<div class="wnone">No collection</div>';
+      return arr.map(function (x) { return '<div class="wtype"><i style="background:' + x.col + '"></i>' + esc(x.w.name) + '</div>'; }).join('');
+    }
+    if (!(settings.waste || []).length) { $('wasteToday').innerHTML = '<div class="muted">Add your collection days in ••• → Waste Collection.</div>'; $('wasteWeek').innerHTML = ''; return; }
+    html = '<div class="wlabel">Today</div>' + list(wasteOn(t)) + '<div class="wlabel" style="margin-top:12px">Tomorrow</div>' + list(wasteOn(tm2));
+    $('wasteToday').innerHTML = html;
+    var wk = '';
+    for (var i = 0; i < 7; i++) {
+      var d = (t + i) % 7, dots = wasteOn(d).filter(function (x) { return x.w.days.length < 7; });
+      wk += '<div class="wday' + (i === 0 ? ' today' : '') + '">' + DLETTER[d] + '<span>' + dots.map(function (x) { return '<i style="background:' + x.col + '"></i>'; }).join('') + '</span></div>';
+    }
+    $('wasteWeek').innerHTML = wk;
+  }
+
+  /* ---------- reminder banners ---------- */
+  var nudgeKey = null;
+  function nudgeCandidates() {
+    var now = new Date(), h = now.getHours(), out = [], today = ymd(now);
+    var special = function (d) { return wasteOn(d).filter(function (x) { return x.w.days.length < 7; }); };
+    if (h >= 20) {
+      var tmr = special((now.getDay() + 1) % 7);
+      if (tmr.length) out.push({ key: 'waste-eve-' + today, icon: '🗑', title: tmr.map(function (x) { return x.w.name; }).join(' & ') + ' collection tomorrow', body: 'Put it out tonight.' });
+    }
+    if (h >= 6 && h < 10) {
+      var tod = special(now.getDay());
+      if (tod.length) out.push({ key: 'waste-am-' + today, icon: '🗑', title: tod.map(function (x) { return x.w.name; }).join(' & ') + ' collection today', body: 'Don\'t forget to put it out.' });
+    }
+    if (h >= 8 && h < 21) {
+      var ex = expiry.filter(function (it) { var d = dayDiff(it.d); return d >= 0 && d <= 1; });
+      if (ex.length) out.push({ key: 'exp-' + today, icon: '⏳', title: 'Use soon: ' + ex.map(function (it) { return it.n; }).join(', '), body: 'Expiring today or tomorrow.' });
+    }
+    return out;
+  }
+  function checkNudges() {
+    var dismissed = store.get('nudges', {}), c = nudgeCandidates().filter(function (n) { return !dismissed[n.key]; })[0];
+    if (!c) { $('nudge').classList.remove('show'); nudgeKey = null; return; }
+    if (nudgeKey === c.key) return;
+    nudgeKey = c.key;
+    $('nudgeIcon').textContent = c.icon; $('nudgeTitle').textContent = c.title; $('nudgeBody').textContent = c.body;
+    $('nudge').classList.add('show');
+    if (actx) chime();
+  }
+  $('nudgeX').addEventListener('click', function () {
+    var d = store.get('nudges', {}), keep = {}, today = ymd(new Date());
+    for (var k in d) if (k.indexOf(today) >= 0) keep[k] = 1;   // forget old days
+    if (nudgeKey) keep[nudgeKey] = 1;
+    store.set('nudges', keep);
+    $('nudge').classList.remove('show'); nudgeKey = null;
+    setTimeout(checkNudges, 600);
+  });
+
+  /* ================= Home Advisor ================= */
+  function hoursAhead(n) {
+    var d = wxState.data;
+    if (!d || !d.hourly) return [];
+    var h = d.hourly, i0 = hourIdx(h.time, d.current.time), out = [], aqMap = {};
+    var aq = wxState.aq && wxState.aq.hourly;
+    if (aq && aq.time) for (var k = 0; k < aq.time.length; k++) aqMap[aq.time[k].slice(0, 13)] = aq.us_aqi[k];
+    for (var i = i0; i < Math.min(h.time.length, i0 + n); i++) {
+      out.push({ t: h.time[i], h: +h.time[i].slice(11, 13), temp: h.temperature_2m[i], tc: toC(h.temperature_2m[i]),
+        rh: h.relative_humidity_2m ? h.relative_humidity_2m[i] : 60, pp: h.precipitation_probability ? h.precipitation_probability[i] : 0,
+        pr: h.precipitation ? h.precipitation[i] : 0, uv: h.uv_index ? h.uv_index[i] : 0, day: h.is_day[i],
+        aqi: aqMap[h.time[i].slice(0, 13)], wind: h.wind_speed_10m ? h.wind_speed_10m[i] : 0, same: h.time[i].slice(0, 10) === d.current.time.slice(0, 10) });
+    }
+    return out;
+  }
+  function bestRun(arr, ok) {
+    var best = null, cur = null;
+    arr.forEach(function (x, i) {
+      if (ok(x)) { if (!cur) cur = { a: i, b: i }; else cur.b = i; if (!best || cur.b - cur.a > best.b - best.a) best = { a: cur.a, b: cur.b }; }
+      else cur = null;
+    });
+    return best;
+  }
+  function advise() {
+    var out = [], H = hoursAhead(24), now = new Date(), nh = now.getHours(), d = wxState.data;
+    if (!H.length) return out;
+    var next12 = H.slice(0, 12);
+    // rain / umbrella
+    var rain = next12.filter(function (x) { return x.pp >= 50 || x.pr >= 0.5; })[0];
+    if (rain) out.push({ p: 80, i: '☂️', t: (rain === H[0] ? 'Rain now' : 'Rain likely ' + atHour(rain.t)), s: 'Carry an umbrella and keep the windows on the windy side shut.' });
+    // laundry
+    var dryOk = function (x) { return x.day && x.pp < 30 && x.pr < 0.1 && x.rh < 75 && x.tc >= 16; };
+    var todayLight = H.filter(function (x) { return x.same && x.day; });
+    if (todayLight.length >= 2) {
+      var run = bestRun(todayLight, dryOk);
+      if (run && run.b - run.a >= 2) {
+        var later = todayLight.slice(run.b + 1).filter(function (x) { return x.pp >= 50 || x.pr >= 0.3; })[0];
+        out.push({ p: 60, i: '👕', t: 'Good drying weather ' + hourText(todayLight[run.a].h) + '–' + hourText(todayLight[run.b].h + 1),
+          s: later ? 'Bring clothes in before ' + hourText(later.h) + '. Rain expected.' : 'Low humidity and no rain expected.' });
+      } else out.push({ p: 55, i: '👕', t: 'Not a good drying day', s: 'Rain or high humidity. Dry clothes indoors or under a fan.' });
+    } else if (nh >= 17) {
+      var tmrLight = H.filter(function (x) { return !x.same && x.day; }), r2 = bestRun(tmrLight, dryOk);
+      if (tmrLight.length && r2 && r2.b - r2.a >= 2) out.push({ p: 25, i: '👕', t: 'Tomorrow is good for laundry', s: 'Best between ' + hourText(tmrLight[r2.a].h) + ' and ' + hourText(tmrLight[r2.b].h + 1) + '.' });
+    }
+    // windows / air
+    var hasAq = H[0].aqi !== undefined;
+    if (hasAq) {
+      if (H[0].aqi > 150) {
+        var better = next12.filter(function (x) { return x.aqi !== undefined && x.aqi <= 100; })[0];
+        out.push({ p: 85, i: '😷', t: 'Keep windows closed', s: 'Air is unhealthy now (AQI ' + Math.round(H[0].aqi) + ').' + (better ? ' Better ' + atHour(better.t) + '.' : ' Use an air purifier if you have one.') });
+      } else {
+        var air = bestRun(next12, function (x) { return x.aqi !== undefined && x.aqi <= 100 && x.tc >= 15 && x.tc <= 31 && x.pr < 0.1; });
+        if (air && air.b - air.a >= 1) out.push({ p: 50, i: '🪟', t: 'Air out the house ' + hourText(next12[air.a].h) + '–' + hourText(next12[air.b].h + 1),
+          s: 'Clean air (AQI about ' + Math.round(next12[air.a].aqi) + ') and comfortable temperatures.' });
+      }
+    }
+    // heat / cold
+    var maxH = next12.reduce(function (a, x) { return x.tc > a.tc ? x : a; }, next12[0]);
+    if (maxH.tc >= 35) {
+      var hot = next12.filter(function (x) { return x.tc >= 32; })[0];
+      out.push({ p: 70, i: '🥵', t: 'Very hot: up to ' + Math.round(maxH.temp) + '°', s: 'Close curtains on the sunny side. AC or cooler from about ' + hourText(hot.h) + '. Drink plenty of water.' });
+    } else if (maxH.tc >= 31) out.push({ p: 40, i: '❄️', t: 'Warm afternoon: ' + Math.round(maxH.temp) + '°', s: 'Fan or AC likely needed around ' + hourText(maxH.h) + '.' });
+    var night = H.filter(function (x) { return x.h >= 21 || x.h <= 6; });
+    var minN = night.length ? night.reduce(function (a, x) { return x.tc < a.tc ? x : a; }, night[0]) : null;
+    if (minN && minN.tc <= 12) out.push({ p: 55, i: '🧣', t: 'Cold night: down to ' + Math.round(minN.temp) + '°', s: 'Keep blankets ready and close windows before bed.' });
+    if (nh >= 15 && nh < 21 && H[0].tc >= 28) {
+      var cool = H.filter(function (x) { return x.same && x.h >= 18 && x.tc <= 26 && (x.aqi === undefined || x.aqi <= 120); })[0];
+      if (cool) out.push({ p: 45, i: '🌬', t: 'Cooler evening from ' + hourText(cool.h), s: 'Switch off the AC and open windows. It drops to ' + Math.round(cool.temp) + '°.' });
+    }
+    // geyser
+    if (nh >= 18 || nh < 8) {
+      var morn = H.filter(function (x) { return x.h === 6; })[0];
+      if (morn && morn.tc <= 19) out.push({ p: 35, i: '🚿', t: 'Chilly morning: ' + Math.round(morn.temp) + '° at 6 AM', s: 'Switch on the geyser about 20 minutes before baths.' });
+      else if (morn && morn.tc >= 26) out.push({ p: 15, i: '🚿', t: 'Warm morning: ' + Math.round(morn.temp) + '°', s: 'A short geyser run is enough, or skip it.' });
+    }
+    // walk
+    var walk = null, ws = 1e9;
+    H.forEach(function (x) {
+      if (x.h < 5 || x.h > 20) return;
+      var sc = Math.abs(x.tc - 22) * 2 + (x.aqi !== undefined ? x.aqi / 8 : 0) + (x.day ? x.uv * 3 : 0) + x.pp / 4 + (x.rh > 85 ? 8 : 0);
+      if (sc < ws) { ws = sc; walk = x; }
+    });
+    if (walk) out.push({ p: 30, i: '🚶', t: 'Best time for a walk: ' + hourText(walk.h) + (walk.same ? '' : ' tomorrow'),
+      s: Math.round(walk.temp) + '°' + (walk.aqi !== undefined ? ', AQI ' + Math.round(walk.aqi) : '') + (walk.pp >= 20 ? ', ' + walk.pp + '% chance of rain' : '') + '.' });
+    // UV
+    var uvMax = H.filter(function (x) { return x.same; }).reduce(function (a, x) { return Math.max(a, x.uv); }, 0);
+    if (uvMax >= 8 && nh < 15) out.push({ p: 45, i: '🧴', t: 'Very high UV today (' + Math.round(uvMax) + ')', s: 'Sunscreen, a hat and shade between 11 AM and 3 PM.' });
+    // plants
+    var ps = d.daily.precipitation_sum ? d.daily.precipitation_sum[0] : 0;
+    if (ps >= 5) out.push({ p: 15, i: '🪴', t: 'Skip watering the plants', s: 'About ' + Math.round(ps) + ' mm of rain expected today.' });
+    else if (toC(d.daily.temperature_2m_max[0]) >= 34 && nh < 18) out.push({ p: 15, i: '🪴', t: 'Water plants early or late', s: 'Hot and dry today. Avoid watering in the midday sun.' });
+    // home items
+    var ex = expiry.filter(function (it) { return dayDiff(it.d) <= 2; });
+    if (ex.length) out.push({ p: 75, i: '⏳', t: 'Use soon: ' + ex.slice(0, 3).map(function (it) { return it.n; }).join(', ') + (ex.length > 3 ? ' +' + (ex.length - 3) : ''),
+      s: ex.map(function (it) { return it.n + ' ' + expInfo(it.d).txt.toLowerCase(); }).slice(0, 3).join(' · ') });
+    var wTom = nh >= 16 ? wasteOn((now.getDay() + 1) % 7).filter(function (x) { return x.w.days.length < 7; }) : [];
+    var wTod = nh < 12 ? wasteOn(now.getDay()).filter(function (x) { return x.w.days.length < 7; }) : [];
+    if (wTom.length) out.push({ p: 65, i: '🗑', t: wTom.map(function (x) { return x.w.name; }).join(' & ') + ' collection tomorrow', s: 'Put it out tonight.' });
+    if (wTod.length) out.push({ p: 65, i: '🗑', t: wTod.map(function (x) { return x.w.name; }).join(' & ') + ' collection today', s: 'Put it out this morning.' });
+    var openShop = shop.filter(function (s) { return !s.done; }).length;
+    if (openShop) out.push({ p: 10, i: '🛒', t: openShop + ' item' + (openShop === 1 ? '' : 's') + ' on the shopping list', s: shop.filter(function (s) { return !s.done; }).slice(0, 4).map(function (s) { return s.t; }).join(', ') });
+    out.sort(function (a, b) { return b.p - a.p; });
+    return out.slice(0, 8);
+  }
+  function renderAdvisor() {
+    var list = advise(), box = $('advList');
+    if (!list.length) { box.innerHTML = '<div class="muted">Advice appears once the weather has loaded.</div>'; return; }
+    box.innerHTML = list.map(function (a) { return '<div class="acard"><div class="ai">' + a.i + '</div><div><b>' + esc(a.t) + '</b><span>' + esc(a.s) + '</span></div></div>'; }).join('');
+    setText($('advFoot'), 'From the forecast for ' + (settings.place ? settings.place.name : 'your area') + ' · ' + agoText(wxState.t || Date.now()));
+  }
+
+  /* ---------- air quality chart ---------- */
+  function renderAqi() {
+    var aq = wxState.aq, svgEl = $('aqiBars');
+    if (!aq || !aq.hourly || !wxState.data) { svgEl.innerHTML = ''; setText($('aqiBest'), 'Air quality forecast appears once loaded.'); return; }
+    var times = aq.hourly.time, vals = aq.hourly.us_aqi, key = wxState.data.current.time.slice(0, 13), i0 = 0;
+    for (var i = 0; i < times.length; i++) if (times[i].slice(0, 13) === key) { i0 = i; break; }
+    var pts = [];
+    for (i = i0; i < Math.min(times.length, i0 + 24); i++) if (vals[i] !== null && vals[i] !== undefined) pts.push({ h: +times[i].slice(11, 13), v: vals[i], t: times[i] });
+    if (!pts.length) return;
+    var maxV = Math.max(150, Math.max.apply(null, pts.map(function (p) { return p.v; }))), w = 240 / 24, h = '';
+    pts.forEach(function (p, k) {
+      var bh = Math.max(3, p.v / maxV * 96);
+      h += '<rect x="' + (k * w + 1).toFixed(1) + '" y="' + (100 - bh).toFixed(1) + '" width="' + (w - 2).toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="1.5" fill="' + aqiInfo(p.v)[1] + '"' + (k ? '' : ' opacity="1"') + '/>';
+    });
+    svgEl.innerHTML = h;
+    $('aqiLabels').innerHTML = [0, 6, 12, 18, 23].map(function (k) { return pts[k] ? '<span>' + (k ? hourText(pts[k].h) : 'Now') + '</span>' : ''; }).join('');
+    var best = pts.reduce(function (a, p) { return p.v < a.v ? p : a; }, pts[0]), worst = pts.reduce(function (a, p) { return p.v > a.v ? p : a; }, pts[0]);
+    var nowInf = aqiInfo(pts[0].v);
+    $('aqiNow').innerHTML = '<i style="background:' + nowInf[1] + '"></i>Now ' + Math.round(pts[0].v) + ' ' + nowInf[0];
+    setText($('aqiBest'), 'Cleanest: ' + hourText(best.h) + ' (' + Math.round(best.v) + ')');
+    setText($('aqiWorst'), 'Worst: ' + hourText(worst.h) + ' (' + Math.round(worst.v) + ')');
+  }
+
+  /* ---------- currency ---------- */
+  var fx = store.get('fx', null), fxFetched = 0;
+  function fxCodes() {
+    return (settings.fxCodes || 'USD, EUR, GBP, SGD').toUpperCase().split(/[^A-Z]+/).filter(function (c) { return c.length === 3 && c !== (settings.fxBase || 'INR'); }).slice(0, 6);
+  }
+  function loadFx() {
+    var base = (settings.fxBase || 'INR').toUpperCase(), codes = fxCodes();
+    if (!codes.length) return;
+    fxFetched = Date.now();
+    var start = ymd(new Date(Date.now() - 12 * 86400000));
+    getJSON('https://api.frankfurter.dev/v1/' + start + '..?base=' + base + '&symbols=' + codes.join(',')).then(function (r) {
+      fx = { base: base, codes: codes.join(','), rates: r.rates, t: Date.now() };
+      store.set('fx', fx); renderFx();
+    }).catch(function () { if (!fx) $('fxList').innerHTML = '<div class="muted">Couldn\'t load rates. Will try again later.</div>'; });
+  }
+  function renderFx() {
+    var box = $('fxList'), base = (settings.fxBase || 'INR').toUpperCase(), sym = base === 'INR' ? '₹' : base + ' ';
+    if (!fx || fx.base !== base || fx.codes !== fxCodes().join(',')) { box.innerHTML = '<div class="muted">Loading rates…</div>'; return; }
+    var dates = Object.keys(fx.rates).sort(), html = '';
+    fxCodes().forEach(function (c) {
+      var ser = dates.map(function (dt) { return fx.rates[dt][c] ? 1 / fx.rates[dt][c] : null; }).filter(function (v) { return v; });
+      if (!ser.length) return;
+      var last = ser[ser.length - 1], prev = ser.length > 1 ? ser[ser.length - 2] : last, chg = (last - prev) / prev * 100;
+      var mn = Math.min.apply(null, ser), mx = Math.max.apply(null, ser), sp = (mx - mn) || 1;
+      var pl = ser.map(function (v, i) { return (i / Math.max(1, ser.length - 1) * 54).toFixed(1) + ',' + (18 - (v - mn) / sp * 16).toFixed(1); }).join(' ');
+      var col = chg > 0.05 ? 'var(--red)' : chg < -0.05 ? 'var(--green)' : 'var(--label2)';
+      html += '<div class="fxrow"><span class="fxcode">' + c + '</span><span class="fxval">' + sym + last.toFixed(last >= 100 ? 1 : 2) + '</span>' +
+        '<span class="fxchg" style="color:' + col + '">' + (chg > 0 ? '▲' : chg < 0 ? '▼' : '') + Math.abs(chg).toFixed(2) + '%</span>' +
+        '<svg class="fxspark" viewBox="0 0 54 20"><polyline points="' + pl + '" fill="none" stroke="' + col + '" stroke-width="1.6" stroke-linejoin="round"/></svg></div>';
+    });
+    box.innerHTML = html || '<div class="muted">No rates for these currencies.</div>';
+    setText($('fxDate'), dates.length ? 'Price in ' + (base === 'INR' ? '₹' : base) + ' · ' + shortDate(dates[dates.length - 1]) : '');
+  }
+
+  /* ---------- moon & daylight ---------- */
+  function moonInfo(date) {
+    var syn = 29.530588853, age = ((date.getTime() / 86400000 - Date.UTC(2000, 0, 6, 18, 14) / 86400000) % syn + syn) % syn;
+    var f = age / syn, names = [[1.84, 'New Moon'], [5.53, 'Waxing Crescent'], [9.22, 'First Quarter'], [12.91, 'Waxing Gibbous'],
+      [16.61, 'Full Moon'], [20.3, 'Waning Gibbous'], [23.99, 'Last Quarter'], [27.68, 'Waning Crescent'], [99, 'New Moon']], name = '';
+    for (var i = 0; i < names.length; i++) if (age < names[i][0]) { name = names[i][1]; break; }
+    return { f: f, age: age, name: name, illum: (1 - Math.cos(2 * Math.PI * f)) / 2,
+      nextFull: new Date(date.getTime() + ((age < syn / 2 ? syn / 2 - age : syn * 1.5 - age) * 86400000)),
+      nextNew: new Date(date.getTime() + (syn - age) * 86400000) };
+  }
+  function moonSvg(f) {
+    var r = 34, c = 38, k = Math.cos(2 * Math.PI * f), rx = Math.abs(k) * r, wax = f < 0.5;
+    var d = 'M' + c + ',' + (c - r) + ' A' + r + ',' + r + ' 0 0 ' + (wax ? 1 : 0) + ' ' + c + ',' + (c + r) +
+      ' A' + rx.toFixed(2) + ',' + r + ' 0 0 ' + (wax ? (k > 0 ? 0 : 1) : (k > 0 ? 1 : 0)) + ' ' + c + ',' + (c - r) + 'Z';
+    return '<svg width="76" height="76" viewBox="0 0 76 76"><circle cx="38" cy="38" r="34" fill="#3a3a3c"/><path d="' + d + '" fill="#f1efe6"/></svg>';
+  }
+  function renderMoon() {
+    var now = new Date(), m = moonInfo(now);
+    $('moonPic').innerHTML = moonSvg(m.f);
+    function dd(x) { return x.getDate() + ' ' + MONTHS[x.getMonth()].slice(0, 3); }
+    $('moonMeta').innerHTML = '<b>' + m.name + '</b><span>' + Math.round(m.illum * 100) + '% lit</span><span>Full moon ' + dd(m.nextFull) + ' · New moon ' + dd(m.nextNew) + '</span>';
+    var d = wxState.data;
+    if (!d || !d.daily || !d.daily.sunrise) { $('dayLen').innerHTML = '<span>Daylight times appear once the weather has loaded.</span>'; return; }
+    function mins(i) { var a = d.daily.sunrise[i], b = d.daily.sunset[i]; return (+b.slice(11, 13) * 60 + +b.slice(14, 16)) - (+a.slice(11, 13) * 60 + +a.slice(14, 16)); }
+    var today = mins(0), tmr = d.daily.sunrise.length > 1 ? mins(1) : today, diff = tmr - today;
+    var ss = d.daily.sunset[0], gm = +ss.slice(11, 13) * 60 + +ss.slice(14, 16) - 45;
+    $('dayLen').innerHTML = 'Daylight <b>' + Math.floor(today / 60) + ' h ' + (today % 60) + ' min</b><br><span>Tomorrow ' +
+      (diff === 0 ? 'about the same' : Math.abs(diff) + ' min ' + (diff > 0 ? 'longer' : 'shorter')) + ' · Golden hour from ' + fmtFull(Math.floor(gm / 60), gm % 60) + '</span>';
+  }
+
+  /* ---------- settings rows for these tiles ---------- */
+  function svcRow(s) {
+    var row = document.createElement('div'); row.className = 'cell';
+    row.innerHTML = '<button class="minus" type="button" aria-label="Remove"></button><input class="ein sv-name" placeholder="Name (e.g. Milk)">' +
+      '<input class="ein sv-usual" type="number" min="0" max="20" placeholder="Usual" style="flex:none;width:70px">' +
+      '<input class="ein sv-price" type="number" min="0" step="any" placeholder="Price" style="flex:none;width:80px">';
+    row.querySelector('.sv-name').value = s.name || '';
+    row.querySelector('.sv-usual').value = s.usual !== undefined ? s.usual : 1;
+    row.querySelector('.sv-price').value = s.price || '';
+    row._svc = s;
+    row.querySelector('.minus').addEventListener('click', function () { row.parentNode.removeChild(row); });
+    $('svcRows').appendChild(row);
+  }
+  $('addSvc').addEventListener('click', function () { if ($('svcRows').children.length < 9) { svcRow({}); $('svcRows').lastChild.querySelector('.sv-name').focus(); } });
+  function wasteRow(w) {
+    var row = document.createElement('div'); row.className = 'cell';
+    var btns = DLETTER.map(function (L, i) { return '<button type="button" data-d="' + i + '"' + (w.days && w.days.indexOf(i) >= 0 ? ' class="on"' : '') + '>' + L + '</button>'; }).join('');
+    row.innerHTML = '<button class="minus" type="button" aria-label="Remove"></button><input class="ein wa-name" placeholder="e.g. Dry waste"><span class="daybtns">' + btns + '</span>';
+    row.querySelector('.wa-name').value = w.name || '';
+    var bs = row.querySelectorAll('.daybtns button');
+    for (var i = 0; i < bs.length; i++) bs[i].addEventListener('click', function () { this.classList.toggle('on'); });
+    row.querySelector('.minus').addEventListener('click', function () { row.parentNode.removeChild(row); });
+    $('wasteRows').appendChild(row);
+  }
+  $('addWaste').addEventListener('click', function () { if ($('wasteRows').children.length < 6) { wasteRow({ days: [] }); $('wasteRows').lastChild.querySelector('.wa-name').focus(); } });
+  function openKitchenSettings() {
+    $('svcRows').innerHTML = '<div class="cell" style="min-height:32px;font-size:13px;color:var(--label2)"><span style="flex:1;padding-left:34px">Name</span><span style="width:70px">Usual / day</span><span style="width:80px">Price</span></div>';
+    (draft.services || []).forEach(svcRow);
+    $('wasteRows').innerHTML = ''; (draft.waste || []).forEach(wasteRow);
+    $('fxBase').value = draft.fxBase || 'INR'; $('fxCodes').value = draft.fxCodes || 'USD, EUR, GBP, SGD';
+  }
+  function commitKitchenSettings() {
+    var rows = $('svcRows').children, svcs = [], today = ymd(new Date());
+    for (var i = 0; i < rows.length; i++) {
+      if (!rows[i].querySelector('.sv-name')) continue;
+      var n = trim(rows[i].querySelector('.sv-name').value);
+      if (!n) continue;
+      var old = rows[i]._svc || {};
+      svcs.push({ id: old.id || 's' + Date.now().toString(36) + i, name: n, usual: Math.max(0, +rows[i].querySelector('.sv-usual').value || 0),
+        price: Math.max(0, +rows[i].querySelector('.sv-price').value || 0), start: old.start || today });
+    }
+    draft.services = svcs;
+    var wr = $('wasteRows').children, ws = [];
+    for (i = 0; i < wr.length; i++) {
+      var wn = trim(wr[i].querySelector('.wa-name').value), on = wr[i].querySelectorAll('.daybtns button.on'), days = [];
+      for (var j = 0; j < on.length; j++) days.push(+on[j].getAttribute('data-d'));
+      if (wn && days.length) ws.push({ name: wn, days: days.sort() });
+    }
+    draft.waste = ws;
+    draft.fxBase = (trim($('fxBase').value) || 'INR').toUpperCase().slice(0, 3);
+    draft.fxCodes = trim($('fxCodes').value) || 'USD, EUR, GBP, SGD';
+  }
+  function renderKitchen() { renderShop(); whRender(); renderExp(); renderTally(); renderWaste(); renderAdvisor(); renderAqi(); renderFx(); renderMoon(); }
+
+  function kitchenTick(d) {
+    if (d.getSeconds() !== 0) return;
+    checkNudges();
+    var day = ymd(d);
+    if (day !== kitchenDay) { kitchenDay = day; renderTally(); renderWaste(); renderExp(); renderMoon(); }
+    if (d.getMinutes() % 10 === 0) renderAdvisor();
+    if (Date.now() - fxFetched > 6 * 3600000) loadFx();
+  }
+  var kitchenDay = ymd(new Date());
+  (function () {   // give the starter services a start date of today
+    var changed = false, today = ymd(new Date());
+    (settings.services || []).forEach(function (s) { if (!s.start) { s.start = today; changed = true; } });
+    if (changed) store.set('settings', settings);
+  })();
+  var kitchenReady = true;
+
   /* ---------- settings sheet ---------- */
   var draft = null;
   function hourOpts(sel) {
@@ -1998,10 +2864,11 @@ svg{display:block}
     paintStations();
     $('pinNotes').checked = !!draft.pinNotes; $('privNotes').checked = !!draft.privNotes; $('approxLoc').checked = draft.approxLoc !== false;
     paintPinCells();
+    openKitchenSettings();
     openM($('settings'));
   }
   $('settingsBtn').addEventListener('click', openSettings);
-  $('settingsBtn2').addEventListener('click', openSettings);
+  (function () { var b = document.querySelectorAll('.setbtn'); for (var i = 0; i < b.length; i++) b[i].addEventListener('click', openSettings); })();
   function paintPinCells() {
     $('pinSet').textContent = hasPin() ? 'Change Passcode' : 'Turn Passcode On';
     $('pinOff').classList.toggle('hidden', !hasPin());
@@ -2115,6 +2982,8 @@ svg{display:block}
     }
     draft.places = places;
     var weatherChanged = JSON.stringify(draft.place) !== JSON.stringify(settings.place) || draft.units !== settings.units || draft.approxLoc !== settings.approxLoc;
+    commitKitchenSettings();
+    var fxChanged = draft.fxBase !== settings.fxBase || draft.fxCodes !== settings.fxCodes;
     settings = draft; draft = null;
     store.set('settings', settings);
     closeM($('settings'));
@@ -2123,12 +2992,16 @@ svg{display:block}
     if (weatherChanged) { wxState.data = null; wxState.aq = null; wxState.fxKey = ''; loadWeather(true); }
     else { wxState.fxKey = ''; renderWeather(); }
     renderTodos(); renderNotes(); renderPlaces(); renderMusic(); renderMap(true);
+    renderKitchen(); if (fxChanged) loadFx();
   }
 
   /* ---------- start ---------- */
   readSync();
   expireSync();
   setPage(0);
+  renderKitchen();
+  loadFx();
+  setTimeout(checkNudges, 2000);
   renderTimers();
   renderTodos();
   renderNotes();
